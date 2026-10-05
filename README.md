@@ -1,4 +1,4 @@
-# SIMPosyandu v26.08.7
+# SIMPosyandu v26.10.1
 
 SIMPosyandu adalah aplikasi Sistem Informasi Posyandu berbasis PHP dan MySQL yang dirancang untuk membantu pemerintah desa dan kader Posyandu dalam mengelola data kesehatan masyarakat secara digital.
 
@@ -35,15 +35,15 @@ Dengan integrasi ini, desa dapat memiliki sistem pengelolaan data sendiri tanpa 
 
 1. Upload aplikasi ke hosting.
 2. Buat database MySQL.
-3. Import file SQL.
-4. Atur konfigurasi koneksi database.
+3. Import file database/schema.sql.
+4. Salin config/credentials.example.php menjadi config/credentials.php lalu isi koneksi database.
 5. Jalankan aplikasi melalui browser.
 
 ## Versi
 
 Versi saat ini:
 
-SIMPosyandu v26.08.7
+SIMPosyandu v26.10.1
 
 ## Pengembangan
 

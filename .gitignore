@@ -1,0 +1,25 @@
+# Kredensial lokal - JANGAN commit
+config/credentials.php
+
+# Upload user & backup
+uploads/*/
+uploads/*.* 
+!uploads/.gitkeep
+!uploads/*/.gitkeep
+*.sql
+!database/schema.sql
+!database/migrations_ui/*.sql
+
+# Log & sampah server
+error_log
+**/error_log
+*.log
+*.bak
+*.tmp
+*.zip
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
