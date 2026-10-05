@@ -1,4 +1,4 @@
-# SIMPosyandu v26.10.1
+# SIMPosyandu v26.10.2
 
 SIMPosyandu adalah aplikasi Sistem Informasi Posyandu berbasis PHP dan MySQL yang dirancang untuk membantu pemerintah desa dan kader Posyandu dalam mengelola data kesehatan masyarakat secara digital.
 

@@ -8,6 +8,7 @@ class MetaApi extends BaseController
 {
     public function whatsnew()
     {
-        return $this->response->setJSON(['success' => true, 'version' => '26.10.1', 'notes' => []]);
+        $cfg = config('Simposyandu');
+        return $this->response->setJSON(['success' => true, 'version' => $cfg->versi, 'notes' => $cfg->changelog()]);
     }
 }
