@@ -38,7 +38,7 @@ class Balita extends BaseController
             ];
         }
 
-        return view('balita/index', ['rows' => $rows, 'total' => count($rows)]);
+        return view('balita/index_asli');
     }
 
     public function tambah()
@@ -67,6 +67,6 @@ class Balita extends BaseController
     {
         $row = model('BalitaModel')->find((int) $id);
         if (! $row) throw \CodeIgniter\Exceptions\PageNotFoundException::forPageNotFound();
-        return view('balita/detail', ['row' => $row]);
+        return view('balita/detail_asli', ['row' => $row]);
     }
 }

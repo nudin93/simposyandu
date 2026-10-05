@@ -9,7 +9,7 @@ class Auth extends BaseController
     {
         if (session()->get('kader_id')) return redirect()->to('/dashboard');
         $pengaturan = model('PengaturanModel')->get();
-        return view('auth/login', [
+        return view('auth/login_asli', [
             'pengaturan' => $pengaturan,
             'siteKey'    => env('recaptcha.siteKey', $pengaturan['recaptcha_site_key'] ?? ''),
         ]);

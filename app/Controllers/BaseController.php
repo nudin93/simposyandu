@@ -15,7 +15,7 @@ use Psr\Log\LoggerInterface;
 abstract class BaseController extends Controller
 {
     protected $request;
-    protected $helpers = ['posyandu', 'permission', 'opensid'];
+    protected $helpers = ['posyandu', 'permission', 'opensid', 'legacy_db'];
     protected $session;
 
     public function initController(RequestInterface $request, ResponseInterface $response, LoggerInterface $logger)

@@ -19,7 +19,7 @@ class Dashboard extends BaseController
                 return (int) $b->countAllResults();
             } catch (\Throwable $e) { return 0; }
         };
-        return view('dashboard/index', [
+        return view('dashboard/index_asli', [
             'total_balita'  => $count('balita'),
             'total_bayi'    => $count('bayi'),
             'total_bumil'   => $count('ibu_hamil'),
