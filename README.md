@@ -1,23 +1,50 @@
-# SIMPosyandu v26.10.2
+# SIMPosyandu v26.10.1
 
 SIMPosyandu adalah aplikasi Sistem Informasi Posyandu berbasis PHP dan MySQL yang dirancang untuk membantu pemerintah desa dan kader Posyandu dalam mengelola data kesehatan masyarakat secara digital.
 
-## Instalasi
+Aplikasi ini dikembangkan sebagai bagian dari upaya membangun rumah data desa yang mandiri, terintegrasi, dan mudah digunakan.
 
-Dengan composer:
-1. composer install
-2. Salin .env.example menjadi .env lalu isi database.
-3. Import database/schema.sql.
-4. php spark serve lalu buka http://localhost:8080
+## Fitur Utama
 
-Tanpa composer (hosting):
-1. Download simposyandu-ci4-full.zip dari Releases.
-2. Upload ke hosting dan extract.
-3. Salin env menjadi .env lalu isi database.
-4. Import database/schema.sql.
+- Data Ibu Hamil
+- Data Bayi
+- Data Balita
+- Data Lansia
+- Data Imunisasi
+- Data Gizi
+- Pemantauan Stunting
+- Jadwal Kegiatan Posyandu
+- Laporan Posyandu
+- Integrasi data penduduk OpenSID
+
+## Integrasi OpenSID
+
+SIMPosyandu dikembangkan agar dapat terhubung dengan sistem data desa berbasis OpenSID, sehingga data dasar penduduk dapat dimanfaatkan untuk mendukung pelayanan kesehatan desa.
+
+Dengan integrasi ini, desa dapat memiliki sistem pengelolaan data sendiri tanpa bergantung sepenuhnya pada pengumpulan data manual.
 
 ## Teknologi
 
-- PHP 8.2, MySQL, CodeIgniter 4
-- Bootstrap, AdminLTE
+- PHP
+- MySQL
+- Bootstrap
+- AdminLTE
 - Database Terintegrasi OpenSID
+
+## Instalasi
+
+1. Upload aplikasi ke hosting.
+2. Buat database MySQL.
+3. Import file database/schema.sql.
+4. Salin config/credentials.example.php menjadi config/credentials.php lalu isi koneksi database.
+5. Jalankan aplikasi melalui browser.
+
+## Versi
+
+Versi saat ini:
+
+SIMPosyandu v26.10.1
+
+## Pengembangan
+
+SIMPosyandu akan terus dikembangkan sesuai kebutuhan pemerintah desa, kader Posyandu, dan masyarakat untuk mendukung digitalisasi pelayanan kesehatan desa.
