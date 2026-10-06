@@ -39,6 +39,15 @@ Dengan integrasi ini, desa dapat memiliki sistem pengelolaan data sendiri tanpa 
 4. Salin config/credentials.example.php menjadi config/credentials.php lalu isi koneksi database.
 5. Jalankan aplikasi melalui browser.
 
+## Masuk Pertama Kali
+
+Setelah instalasi, masuk dengan:
+
+- Nama pengguna: admin
+- Kata sandi: admin123
+
+Segera ganti kata sandi melalui menu profil setelah masuk.
+
 ## Versi
 
 Versi saat ini:
