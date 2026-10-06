@@ -1404,6 +1404,12 @@ COMMIT;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 -- --------------------------------------------------------
+
+-- Akun bawaan instalasi baru (ganti kata sandi setelah masuk!)
+-- Nama pengguna: admin | Kata sandi: admin123
+INSERT INTO `kader` (`nama`, `username`, `password`, `role`, `status`, `jabatan`) VALUES
+('Administrator', 'admin', '$2y$10$8OhXHxdS9/gtifWl.Hju0e.t5f5neb2k/b/zWFxSEDPPTpwW94t.y', 'admin', 1, 'Administrator');
+
 -- SEED GENERIK (aman untuk publik, tanpa NIK/data warga)
 -- --------------------------------------------------------
 INSERT INTO `pengaturan` (`id`, `nama_aplikasi`, `nama_posyandu`, `nama_desa`, `kecamatan`, `kabupaten`, `provinsi`, `logo`, `favicon`, `nomor_kontak`, `email`, `warna_tema`, `dark_mode`, `updated_at`) VALUES
