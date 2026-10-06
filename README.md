@@ -35,7 +35,7 @@ Dengan integrasi ini, desa dapat memiliki sistem pengelolaan data sendiri tanpa 
 
 1. Upload aplikasi ke hosting.
 2. Buat database MySQL.
-3. Import file database/schema.sql.
+3. Import file database/install.sql.
 4. Salin config/credentials.example.php menjadi config/credentials.php lalu isi koneksi database.
 5. Jalankan aplikasi melalui browser.
 
