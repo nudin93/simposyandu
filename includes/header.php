@@ -65,6 +65,7 @@ if (!$__isOwnProfile && function_exists('canViewMenu')) {
         'usia_produktif' => 'usia_produktif', 'pemeriksaan_dewasa' => 'pemeriksaan_dewasa',
         'kb' => 'kb',
         'kegiatan_posyandu' => 'kegiatan_posyandu', 'kunjungan_rumah' => 'kunjungan_rumah', 'jadwal' => 'jadwal',
+        'nama_kader' => 'nama_kader',
         'artikel' => 'artikel',
         'sanitasi' => 'sanitasi', 'phbs' => 'phbs',
         'laporan' => 'laporan', 'kartu' => 'kartu',
