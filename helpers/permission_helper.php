@@ -54,6 +54,9 @@ if (!function_exists('getMenuDefinitions')) {
             'kunjungan_rumah'   => ['label' => 'Kunjungan Rumah', 'group' => 'KEGIATAN'],
             'jadwal'            => ['label' => 'Jadwal Posyandu', 'group' => 'KEGIATAN'],
 
+            // DATA KADER (direktori nama-nama kader, read-only)
+            'nama_kader'          => ['label' => 'Nama-nama Kader', 'group' => 'DATA KADER'],
+
             // ARTIKEL
             'artikel'           => ['label' => 'Artikel', 'group' => 'ARTIKEL'],
 
@@ -140,6 +143,7 @@ if (!function_exists('getDefaultMenusForRole')) {
             'lansia', 'pemeriksaan_lansia',
             'usia_produktif', 'pemeriksaan_dewasa', 'kb',
             'kegiatan_posyandu', 'kunjungan_rumah', 'jadwal',
+            'nama_kader',
             'artikel', 'sanitasi', 'phbs',
             'laporan', 'kartu',
         ];
