@@ -265,6 +265,17 @@ $__u_foto_url = $__u_foto ? APP_URL . '/uploads/kader/' . rawurlencode($__u_foto
           </a>
         </li><?php endif; ?>
 
+        <!-- DATA KADER -->
+        <li class="nav-header">DATA KADER</li>
+        <?php if (cv('nama_kader')): ?>
+        <li class="nav-item">
+          <a href="<?= APP_URL ?>/modules/nama_kader/index.php" class="nav-link <?= navActive($folder==='nama_kader') ?>">
+            <i class="nav-icon fas fa-id-card-alt"></i>
+            <p>Nama-nama Kader</p>
+          </a>
+        </li>
+        <?php endif; ?>
+
         <!-- KEGIATAN -->
         <li class="nav-header">KEGIATAN POSYANDU</li>
         <li class="nav-item <?= menuOpen($openKegiatan) ?>">
