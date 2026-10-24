@@ -270,7 +270,8 @@ document.addEventListener('DOMContentLoaded', function() {
   var GH_KEY = "simposyandu_seen_github_ver";
   var CUR = "<?= defined('APP_VERSION') ? APP_VERSION : '1.0.13' ?>";
   function seenGh(){ try { return window.localStorage.getItem(GH_KEY) || ""; } catch(e){ return ""; } }
-  function saveGh(v){ try { window.localStorage.setItem(GH_KEY, v || ""); } catch(e){} }
+  function ghSeenKey(j){ return String(j.remote_version || "") + "|" + String((j.remote_commit || {}).sha || ""); }
+  function saveGhKey(k){ try { window.localStorage.setItem(GH_KEY, k || ""); } catch(e){} }
   function esc(s){ var d = document.createElement("div"); d.textContent = String(s == null ? "" : s); return d.innerHTML; }
   function bumpBadge(){
     try {
@@ -288,27 +289,37 @@ document.addEventListener('DOMContentLoaded', function() {
       + '<br>2. <strong>git pull</strong> di VPS, atau upload ZIP terbaru ke DALAM <strong>public_html/simposyandu/</strong> lalu Extract &gt; Overwrite.'
       + '<br>3. Pastikan tidak terbentuk folder ganda.<br>4. Buka index.php + <strong>Ctrl+Shift+R</strong>, lalu login ulang.</div>';
   }
+  function ghTitle(j){
+    if (j.update_reason === "commit" && String(j.remote_version) === String(j.local_version))
+      return "\uD83D\uDE80 Ada Pembaruan Baru di GitHub";
+    return "\uD83D\uDE80 Update Terbaru v" + j.remote_version + " Tersedia";
+  }
+  function ghBanner(j){
+    if (j.update_reason === "commit" && String(j.remote_version) === String(j.local_version))
+      return 'Ada commit baru di GitHub setelah versi terpasang <strong>v' + esc(j.local_version) + '</strong>.';
+    return 'Aplikasi terpasang <strong>v' + esc(j.local_version) + '</strong>, versi GitHub sudah <strong>v' + esc(j.remote_version) + '</strong>.';
+  }
   function showGh(j){
     if (!window.Swal || !j || !j.update_available) return;
     var rc = j.remote_commit || {};
     var msg = String(rc.message || "").split("\n")[0];
-    var html = '<div class="text-start"><div class="alert alert-warning py-2 px-3 mb-2 small">Aplikasi terpasang <strong>v' + esc(j.local_version)
-      + '</strong>, versi GitHub sudah <strong>v' + esc(j.remote_version) + '</strong>.</div>';
+    var html = '<div class="text-start"><div class="alert alert-warning py-2 px-3 mb-2 small">' + ghBanner(j) + '</div>';
     if (msg) html += '<div class="border rounded p-2 mb-1"><div class="fw-semibold small">Perubahan terbaru <small class="text-muted">' + esc(rc.date || "") + '</small></div><div class="small">' + esc(msg) + '</div></div>';
     html += '<a href="' + esc(j.compare_url || "https://github.com/nudin93/simposyandu/commits/main") + '" target="_blank" rel="noopener" class="small">Lihat semua perubahan di GitHub</a></div>';
     Swal.fire({
-      title: "\uD83D\uDE80 Update Terbaru v" + j.remote_version + " Tersedia",
+      title: ghTitle(j),
       html: html, width: 560, showCloseButton: true, showDenyButton: true,
       confirmButtonText: "Cara Perbarui", denyButtonText: "Nanti", denyButtonColor: "#6c757d"
     }).then(function(r){
       if (r.isConfirmed) {
         Swal.fire({ title: "Cara Perbarui", html: panduanHtml(), icon: "info", confirmButtonText: "Mengerti", width: 520 });
       }
-      saveGh(j.remote_version);
+      saveGhKey(ghSeenKey(j));
     });
   }
-  window.checkGithubUpdate = function(cb){
-    fetch(GH_URL, { credentials: "same-origin" }).then(function(r){ return r.json(); })
+  window.checkGithubUpdate = function(cb, fresh){
+    var u = GH_URL + (fresh ? "?fresh=1" : "");
+    fetch(u, { credentials: "same-origin" }).then(function(r){ return r.json(); })
       .then(function(j){ if (cb) cb(j); }).catch(function(){ if (cb) cb(null); });
   };
   // Bungkus modal lonceng: tampilkan info GitHub paling atas bila ada update
@@ -321,17 +332,17 @@ document.addEventListener('DOMContentLoaded', function() {
             var rc = g.remote_commit || {};
             var msg = String(rc.message || "").split("\n")[0];
             Swal.fire({
-              title: "\uD83D\uDE80 Update Terbaru v" + g.remote_version,
-              html: '<div class="text-start"><div class="alert alert-warning py-2 px-3 small">Terpasang v' + esc(g.local_version) + ' &nbsp;→&nbsp; GitHub v' + esc(g.remote_version) + (msg ? '<br>' + esc(msg) : '') + '</div></div>',
+              title: ghTitle(g),
+              html: '<div class="text-start"><div class="alert alert-warning py-2 px-3 small">' + ghBanner(g) + (msg ? '<br>' + esc(msg) : '') + '</div></div>',
               width: 520, showCloseButton: true, showDenyButton: true, showCancelButton: true,
               confirmButtonText: "Cara Perbarui", denyButtonText: "Lihat di GitHub", cancelButtonText: "Riwayat lokal"
             }).then(function(r){
               if (r.isConfirmed) {
                 Swal.fire({ title: "Cara Perbarui", html: panduanHtml(), icon: "info", confirmButtonText: "Mengerti", width: 520 });
-                saveGh(g.remote_version);
+                saveGhKey(ghSeenKey(g));
               } else if (r.isDenied) {
                 try { window.open(g.compare_url, "_blank", "noopener"); } catch(e){}
-                saveGh(g.remote_version);
+                saveGhKey(ghSeenKey(g));
               } else if (r.dismiss === Swal.DismissReason.cancel) {
                 origBell();
               }
@@ -339,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
           }
           origBell();
-        });
+        }, true); // klik lonceng = cek live, lewati cache
       };
     }
   } catch(e){}
@@ -348,7 +359,7 @@ document.addEventListener('DOMContentLoaded', function() {
       window.checkGithubUpdate(function(j){
         if (!j || !j.update_available) return;
         bumpBadge();
-        if (seenGh() === String(j.remote_version)) return;
+        if (seenGh() === ghSeenKey(j)) return;
         setTimeout(function(){ showGh(j); }, 2500); // beri jeda setelah popup lokal bila ada
       });
     }, 800);
