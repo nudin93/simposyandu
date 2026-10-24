@@ -74,14 +74,36 @@ function gh_http_get($url, $timeout = 8) {
 
 $local = defined('APP_VERSION') ? APP_VERSION : '1.0.4';
 $cacheFile = gh_cache_file();
+$fresh = (($_GET['fresh'] ?? '') === '1');
+
+// Tanggal rilis versi lokal (dari changelog) untuk deteksi commit baru tanpa bump versi
+function gh_local_date($local) {
+    try {
+        if (function_exists('app_changelog')) {
+            $best = '';
+            foreach (app_changelog() as $n) {
+                $v = (string)($n['versi'] ?? '');
+                $d = substr((string)($n['tanggal'] ?? ''), 0, 10);
+                if ($v !== '' && version_compare($v, (string)$local, '<=') && $d !== '' && $d > $best) $best = $d;
+            }
+            if ($best !== '') return $best;
+        }
+    } catch (Throwable $e) {}
+    return '';
+}
+$localDate = gh_local_date($local);
 
 // Cache masih segar? langsung pakai (tetap bandingkan dengan versi lokal saat ini)
+// Dilewati bila ?fresh=1 (mis. saat lonceng diklik — wajib cek live ke GitHub)
 try {
-    if (is_file($cacheFile) && (time() - (int)@filemtime($cacheFile)) < GH_CACHE_TTL) {
+    if (!$fresh && is_file($cacheFile) && (time() - (int)@filemtime($cacheFile)) < GH_CACHE_TTL) {
         $c = json_decode((string)@file_get_contents($cacheFile), true);
         if (is_array($c) && !empty($c['remote_version'])) {
             $c['local_version'] = $local;
-            $c['update_available'] = version_compare((string)$c['remote_version'], (string)$local, '>');
+            $verNew = version_compare((string)$c['remote_version'], (string)$local, '>');
+            // Commit GitHub lebih baru dari tanggal rilis lokal = ada update walau versi belum naik
+            $dateNew = (!empty($c['remote_commit']['date']) && $localDate !== '' && $c['remote_commit']['date'] > $localDate);
+            $c['update_available'] = ($verNew || $dateNew);
             $c['cached'] = true;
             echo json_encode($c, JSON_UNESCAPED_UNICODE);
             exit;
@@ -134,11 +156,25 @@ if ($remoteVer === '' && $commit === null) {
 }
 
 if ($remoteVer === '' && $commit !== null) $remoteVer = $local; // versi tak terbaca, tapi commit dapat — anggap tidak ada info versi
+// Commit baru sejak cek terakhir (walau versi belum naik) = tetap update
+$shaChanged = false;
+try {
+    if (is_file($cacheFile)) {
+        $prev = json_decode((string)@file_get_contents($cacheFile), true);
+        $prevSha = (string)(($prev['remote_commit']['sha'] ?? ''));
+        $newSha = (string)(($commit['sha'] ?? ''));
+        if ($prevSha !== '' && $newSha !== '' && $newSha !== $prevSha) $shaChanged = true;
+    }
+} catch (Throwable $e) {}
+$verNew = ($remoteVer !== '' && version_compare($remoteVer, (string)$local, '>'));
+$dateNew = ($commit !== null && !empty($commit['date']) && $localDate !== '' && $commit['date'] > $localDate);
+$reason = $verNew ? 'version' : (($shaChanged || $dateNew) ? 'commit' : '');
 $resp = [
     'success' => true,
     'local_version' => $local,
     'remote_version' => $remoteVer,
-    'update_available' => ($remoteVer !== '' && version_compare($remoteVer, (string)$local, '>')),
+    'update_available' => ($verNew || $shaChanged || $dateNew),
+    'update_reason' => $reason,
     'remote_commit' => $commit,
     'commits' => $commits,
     'compare_url' => 'https://github.com/' . GH_OWNER . '/' . GH_REPO . '/commits/' . GH_BRANCH,
