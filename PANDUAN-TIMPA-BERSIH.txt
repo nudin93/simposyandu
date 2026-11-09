@@ -1,3 +1,0 @@
-SIMPOSYANDU PAKET TIMPA BERSIH v1.0.13
-Menu Beranda Kader mengikuti hak akses user.
-Timpa: backup, upload ke DALAM public_html/simposyandu, Extract Overwrite, index.php + Ctrl+Shift+R, login.
