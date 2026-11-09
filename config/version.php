@@ -1,8 +1,10 @@
 <?php
 /** SIMPOSYANDU - Versi aplikasi + catatan pembaruan (popup "Yang Baru"). */
-if (!defined('APP_VERSION')) define('APP_VERSION', '26.10.3');
+if (!defined('APP_VERSION')) define('APP_VERSION', '26.11.0');
 function app_changelog() {
   return [
+    ['versi' => '26.11.0', 'tanggal' => '2026-11-09', 'judul' => 'Tampilan + halaman seragam ala Penduduk',
+     'items' => ['Lansia, Ibu Hamil, Bayi, Balita: filter Cari + halaman server seperti Penduduk', 'Pindah halaman model baru: ketik nomor halaman (tanpa daftar angka)', 'Data Keluarga: yang meninggal/pindah disembunyikan + jumlah tepat', 'Anak SD/TK: dropdown Pilih Kelas + pop-up pilih kolom', 'Semua tabel: kepala biru sticky + footer di luar area geser']],
     ['versi' => '26.10.3', 'tanggal' => '2026-10-24', 'judul' => 'Notifikasi update tiap ada commit GitHub',
      'items' => ['Lonceng + popup muncul untuk setiap commit baru di GitHub, walau versi belum naik', 'Klik lonceng selalu cek live ke GitHub (lewati cache)', 'Penanda sudah-dilihat per commit agar tiap update hanya popup sekali']],
     ['versi' => '26.10.2', 'tanggal' => '2026-10-24', 'judul' => 'Notifikasi update GitHub + direktori kader',

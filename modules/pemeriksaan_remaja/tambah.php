@@ -46,12 +46,6 @@ if (!$r) {
   </div></div>
 </section>
 <section class="content"><div class="container-fluid">
-  <div class="alert alert-info border-0 shadow-sm">
-    <i class="fas fa-info-circle me-1"></i>
-    Pilih remaja yang akan diperiksa. Jika belum ada di daftar, daftar dulu dari
-    <a href="<?= APP_URL ?>/modules/remaja/index.php" class="fw-semibold">Data Remaja</a>
-    (tombol <strong>Daftarkan</strong>).
-  </div>
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-users me-2 text-warning"></i>Pilih Remaja Terdaftar</h5></div>
     <div class="card-body table-responsive">

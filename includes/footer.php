@@ -39,6 +39,34 @@
 
 ?>
 </div><!-- /.content-wrapper -->
+<?php
+/* STANDAR KADER: bottom nav di semua halaman modul, tanpa sidebar. User lain tidak berubah. */
+$__ft_is_kader = (function_exists('currentUser') && (currentUser()['role'] ?? '') === 'kader');
+if (!empty($__ft_is_kader)) {
+  $__ft_can = function($k){ return function_exists('canViewMenu') ? canViewMenu($k) : true; };
+  $__ft_data = ''; $__ft_periksa = '';
+  foreach (['balita','ibu_hamil','bayi','lansia','anak_tk','anak_sd','remaja'] as $__k) { if ($__ft_can($__k)) { $__ft_data = $__k; break; } }
+  foreach (['pemeriksaan_balita','pemeriksaan_ibu_hamil','pemeriksaan_bayi','pemeriksaan_lansia','pemeriksaan_anak_tk','pemeriksaan_anak_sd','pemeriksaan_remaja'] as $__k) { if ($__ft_can($__k)) { $__ft_periksa = $__k; break; } }
+  $__ft_lap = $__ft_can('laporan');
+  $__ft_cur = basename($_SERVER['PHP_SELF'] ?? '');
+  $__ft_fold = basename(dirname($_SERVER['PHP_SELF'] ?? ''));
+  $__ft_is_home = ($__ft_cur === 'kader_home.php');
+?>
+<style>
+.kh-bottom{position:fixed;bottom:0;left:0;right:0;z-index:1050;background:#fff;border-top:1px solid #e2e8f0;display:flex;padding:8px 4px calc(10px + env(safe-area-inset-bottom));box-shadow:0 -2px 14px rgba(0,0,0,.1);max-width:1024px;margin:0 auto;}
+.kh-bottom a{flex:1;text-align:center;text-decoration:none;color:#64748b;font-size:10px;display:flex;flex-direction:column;gap:3px;align-items:center;padding:6px 2px;border-radius:12px;}
+.kh-bottom a i{font-size:19px;}
+.kh-bottom a.on{background:linear-gradient(135deg,#7c3aed,#4c1d95);color:#fff;}
+body.dark-mode .kh-bottom{background:#1e293b;border-top-color:#334155;}
+</style>
+<nav class="kh-bottom">
+  <a href="<?= APP_URL ?>/kader_home.php" class="<?= $__ft_is_home ? 'on' : '' ?>"><i class="fas fa-home"></i>Beranda</a>
+  <?php if ($__ft_data !== ''): ?><a href="<?= APP_URL ?>/modules/<?= htmlspecialchars($__ft_data) ?>/index.php" class="<?= $__ft_fold === $__ft_data ? 'on' : '' ?>"><i class="fas fa-users"></i>Data</a><?php endif; ?>
+  <?php if ($__ft_periksa !== ''): ?><a href="<?= APP_URL ?>/modules/<?= htmlspecialchars($__ft_periksa) ?>/index.php" class="<?= $__ft_fold === $__ft_periksa ? 'on' : '' ?>"><i class="fas fa-list"></i>Periksa</a><?php endif; ?>
+  <?php if ($__ft_lap): ?><a href="<?= APP_URL ?>/modules/laporan/index.php" class="<?= $__ft_fold === 'laporan' ? 'on' : '' ?>"><i class="fas fa-chart-bar"></i>Laporan</a><?php endif; ?>
+  <a href="<?= APP_URL ?>/modules/kader/profile.php" class="<?= $__ft_fold === 'kader' ? 'on' : '' ?>"><i class="fas fa-cog"></i>Profil</a>
+</nav>
+<?php } ?>
 <footer class="main-footer text-center">
   <strong>Copyright &copy; <?= date('Y') ?> <a href="#"><?= $pengaturan['nama_posyandu'] ?? 'Posyandu' ?></a>.</strong>
 </footer>
@@ -160,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <!-- Custom JS -->
-<script src="<?= APP_URL ?>/assets/js/custom.js?v=20260928"></script>
+<script src="<?= APP_URL ?>/assets/js/custom.js?v=20261110"></script>
 <script>
 /* Popup "Yang Baru" - tampil otomatis tiap versi baru (bandingkan localStorage vs APP_VERSION) */
 (function(){

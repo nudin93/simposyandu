@@ -64,6 +64,7 @@ $allowed = [
     'bayi', 'pemeriksaan_bayi',
     'remaja', 'pemeriksaan_remaja',
     'anak_tk', 'pemeriksaan_anak_tk',
+    'anak_sd', 'pemeriksaan_anak_sd',
     'usia_produktif', 'pemeriksaan_dewasa',
     'kegiatan_posyandu', 'kunjungan_rumah', 'skrining_ptm'
 ];
@@ -97,6 +98,24 @@ if ($type === 'anak_tk') {
         jsonResponse(true, 'Data anak TK dan riwayat pemeriksaannya berhasil dihapus');
     }
     jsonResponse(false, 'Gagal menghapus data anak TK');
+}
+
+// ---- Special handling ----
+// Anak SD: hapus pemeriksaan terkait terlebih dahulu agar tidak meninggalkan
+// data pemeriksaan yatim (orphan).
+if ($type === 'anak_sd') {
+    $anak = fetchOne("SELECT id, nama_lengkap FROM anak_sd WHERE id=$id LIMIT 1");
+    if (!$anak) {
+        jsonResponse(false, 'Data anak SD tidak ditemukan');
+    }
+
+    // Hapus seluruh riwayat pemeriksaan anak ini, lalu data anak SD.
+    query("DELETE FROM pemeriksaan_anak_sd WHERE anak_sd_id=$id");
+    $result = query("DELETE FROM anak_sd WHERE id=$id");
+    if ($result) {
+        jsonResponse(true, 'Data anak SD dan riwayat pemeriksaannya berhasil dihapus');
+    }
+    jsonResponse(false, 'Gagal menghapus data anak SD');
 }
 
 if ($type === 'keluarga') {

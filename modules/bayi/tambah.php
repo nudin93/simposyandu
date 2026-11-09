@@ -115,7 +115,7 @@ if (function_exists('canInput') && !canInput()) { echo '<div class="alert alert-
             document.getElementById('no_kk').value = p.no_kk||'';
             document.getElementById('nama_lengkap').value = p.nama||'';
             document.getElementById('jenis_kelamin').value = p.jenis_kelamin||'L';
-            document.getElementById('tanggal_lahir').value = p.tanggal_lahir||'';
+            document.getElementById('tanggal_lahir').value = (typeof OpenSID_normTgl==='function') ? OpenSID_normTgl(p.tanggal_lahir) : (p.tanggal_lahir||'');
             document.getElementById('dusun').value = p.dusun||'';
             document.getElementById('rt').value = p.rt||'';
             document.getElementById('rw').value = p.rw||'';

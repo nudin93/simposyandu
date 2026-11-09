@@ -42,26 +42,27 @@ require_once __DIR__ . '/../../includes/header.php';
 
 $search = trim($_GET['q'] ?? '');
 $page = max(1, (int)($_GET['page'] ?? 1));
-$perPage = 25;
+$perPage = max(10, min(100, (int)($_GET['per_page'] ?? 10)));
 $offset = ($page - 1) * $perPage;
 $data = [];
 $total = 0;
 $opensidOk = opensid_available();
 
 if ($opensidOk) {
+    $total = countKeluargaOpenSID($search);
     if ($search !== '') {
-        $data = cariKeluargaOpenSID($search, 200);
-        $total = count($data);
-        // simple client-side page slice if needed
-        $data = array_slice($data, $offset, $perPage);
+        $data = cariKeluargaOpenSID($search, $perPage, $offset);
     } else {
-        // list with limit
-        $all = listKeluargaOpenSID(500, 0);
-        $total = count($all);
-        $data = array_slice($all, $offset, $perPage);
+        $data = listKeluargaOpenSID($perPage, $offset);
     }
 }
 $totalPages = max(1, (int)ceil($total / max(1, $perPage)));
+if (!function_exists('buildQs')) {
+    function buildQs(array $params): string {
+        return http_build_query(array_filter($params, fn($v) => $v !== '' && $v !== null));
+    }
+}
+$baseQs = ['q' => $search, 'per_page' => $perPage];
 ?>
 <section class="content-header">
   <div class="container-fluid">
@@ -85,16 +86,27 @@ $totalPages = max(1, (int)ceil($total / max(1, $perPage)));
   <div class="card card-outline card-primary shadow-sm">
     <div class="card-header bg-light py-2">
       <form method="get" class="row g-2 align-items-end">
-        <div class="col-9 col-md-6">
+        <div class="col-12 col-md-5">
           <div class="input-group input-group-sm">
             <span class="input-group-text">Cari:</span>
             <input type="text" name="q" class="form-control" placeholder="No KK / Nama Kepala / Dusun..." value="<?= htmlspecialchars($search) ?>">
           </div>
         </div>
-        <div class="col-3 col-md-2">
+        <div class="col-9 col-md-3">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Tampilkan</span>
+            <select name="per_page" class="form-select" onchange="this.form.submit()">
+              <?php foreach ([10,25,50,100] as $pp): ?>
+              <option value="<?= $pp ?>" <?= $perPage===$pp?'selected':'' ?>><?= $pp ?></option>
+              <?php endforeach; ?>
+            </select>
+            <span class="input-group-text">entri</span>
+          </div>
+        </div>
+        <div class="col-3 col-md-1">
           <button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i></button>
         </div>
-        <div class="col-12 col-md-4 text-md-end">
+        <div class="col-12 col-md-3 text-md-end">
           <span class="text-muted small"><?= number_format($total) ?> keluarga</span>
         </div>
       </form>
@@ -136,17 +148,22 @@ $totalPages = max(1, (int)ceil($total / max(1, $perPage)));
           </tbody>
         </table>
       </div>
-      <?php if ($totalPages > 1): ?>
-      <div class="p-2 border-top bg-light d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <small class="text-muted">Halaman <?= $page ?>/<?= $totalPages ?></small>
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item <?= $page<=1?'disabled':'' ?>">
-            <a class="page-link" href="?q=<?= urlencode($search) ?>&page=<?= max(1,$page-1) ?>">‹</a>
-          </li>
-          <li class="page-item <?= $page>=$totalPages?'disabled':'' ?>">
-            <a class="page-link" href="?q=<?= urlencode($search) ?>&page=<?= min($totalPages,$page+1) ?>">›</a>
-          </li>
-        </ul>
+      <?php if ($total > 0): ?>
+      <div class="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-light gap-2">
+        <div class="text-muted small">
+          Menampilkan <?= $offset + 1 ?> sampai <?= min($offset + $perPage, $total) ?> dari <?= number_format($total) ?> entri
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <?php
+          $qs = buildQs($baseQs);
+          $pageBase = $qs ? "?$qs" : "?";
+          ?>
+          <a class="btn btn-sm btn-outline-primary <?= $page <= 1 ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= max(1, $page - 1) ?>">Sebelumnya</a>
+          <span class="small text-muted">Halaman</span>
+          <input type="number" class="form-control form-control-sm page-jump" style="width:74px" min="1" max="<?= $totalPages ?>" value="<?= $page ?>" data-base="<?= htmlspecialchars($pageBase) ?>" aria-label="Ke halaman">
+          <span class="small text-muted">/ <?= number_format($totalPages) ?></span>
+          <a class="btn btn-sm btn-outline-primary <?= $page >= $totalPages ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= min($totalPages, $page + 1) ?>">Selanjutnya</a>
+        </div>
       </div>
       <?php endif; ?>
     </div>

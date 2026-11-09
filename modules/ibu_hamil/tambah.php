@@ -56,14 +56,11 @@ $provinsi_list = ['Aceh','Sumatera Utara','Sumatera Barat','Riau','Jambi','Sumat
 <div class="card border-primary mb-3">
   <div class="card-header bg-primary text-white"><h5 class="mb-0"><i class="fas fa-search me-2"></i>Pilih dari Data Penduduk</h5></div>
   <div class="card-body">
-    <p class="text-muted small mb-2">Cari warga <strong>perempuan</strong> yang sudah terdaftar. Identitas & data suami (dari KK) terisi otomatis.</p>
+    <p class="text-muted small mb-2">Isi manual, atau cari warga <strong>perempuan</strong> yang sudah terdaftar agar identitas & data suami (dari KK) terisi otomatis.</p>
     <div class="row g-2">
-      <div class="col-md-8 position-relative">
-        <input type="text" id="cariPenduduk" class="form-control" placeholder="Ketik nama..." autocomplete="off">
+      <div class="col-12 position-relative">
+        <input type="text" id="cariPenduduk" class="form-control" placeholder="Ketik nama... (opsional, atau langsung isi form di bawah)" autocomplete="off">
         <div id="hasilCari" class="list-group position-absolute shadow w-100" style="z-index:1050; max-height:280px; overflow-y:auto; display:none;"></div>
-      </div>
-      <div class="col-md-4">
-        <a href="<?= APP_URL ?>/modules/keluarga/index.php" class="btn btn-outline-secondary w-100" target="_blank"><i class="fas fa-home me-1"></i>Kelola via Data Keluarga</a>
       </div>
     </div>
     <div id="infoTerpilih" class="alert alert-success mt-3 mb-0 d-none"><i class="fas fa-check-circle me-1"></i>Terpilih: <strong id="namaTerpilih"></strong></div>
@@ -88,11 +85,11 @@ $provinsi_list = ['Aceh','Sumatera Utara','Sumatera Barat','Riau','Jambi','Sumat
     <div class="row g-3">
       <div class="col-md-6"><label class="form-label fw-semibold">No. Peserta</label>
         <div class="input-group"><span class="input-group-text"><i class="fas fa-id-badge"></i></span><input type="text" name="nomor_peserta" class="form-control" value="<?= $nomor ?>" readonly required></div></div>
-      <div class="col-md-6"><label class="form-label fw-semibold">NIK</label><input type="text" name="nik" id="f_nik" class="form-control" readonly placeholder="16 digit NIK" maxlength="16"></div>
-      <div class="col-12"><label class="form-label fw-semibold">Nama Ibu <span class="text-danger">*</span></label><input type="text" name="nama" id="f_nama" class="form-control" placeholder="Nama lengkap ibu" readonly required></div>
-      <div class="col-md-4"><label class="form-label fw-semibold">Tempat Lahir</label><input type="text" name="tempat_lahir" id="f_tempat" class="form-control" placeholder="Kota" readonly></div>
+      <div class="col-md-6"><label class="form-label fw-semibold">NIK</label><input type="text" name="nik" id="f_nik" class="form-control" placeholder="16 digit NIK" maxlength="16"></div>
+      <div class="col-12"><label class="form-label fw-semibold">Nama Ibu <span class="text-danger">*</span></label><input type="text" name="nama" id="f_nama" class="form-control" placeholder="Nama lengkap ibu" required></div>
+      <div class="col-md-4"><label class="form-label fw-semibold">Tempat Lahir</label><input type="text" name="tempat_lahir" id="f_tempat" class="form-control" placeholder="Kota"></div>
       <div class="col-md-4"><label class="form-label fw-semibold">Tanggal Lahir</label>
-        <input type="date" name="tanggal_lahir" id="tgl_lahir_ibu" readonly class="form-control datepicker" onchange="hitungUmur($('#tgl_lahir_ibu').val(),'#umur_ibu')"></div>
+        <input type="date" name="tanggal_lahir" id="tgl_lahir_ibu" class="form-control datepicker" onchange="hitungUmur($('#tgl_lahir_ibu').val(),'#umur_ibu')"></div>
       <div class="col-md-4"><label class="form-label fw-semibold">Umur (Otomatis)</label><input type="text" id="umur_ibu" class="form-control bg-light" readonly></div>
       <div class="col-md-3"><label class="form-label fw-semibold">Golongan Darah</label><select name="golongan_darah" class="form-select select2"><option value="Tidak Tahu">Tidak Tahu</option><option>A</option><option>B</option><option>AB</option><option>O</option></select></div>
       <div class="col-md-3"><label class="form-label fw-semibold">Pendidikan</label><select name="pendidikan" class="form-select select2"><option>SD</option><option>SMP</option><option>SMA/SMK</option><option>D3</option><option>S1</option><option>S2/S3</option></select></div>
@@ -224,7 +221,7 @@ $('#cariPenduduk').on('input', function() {
     $.getJSON('<?= APP_URL ?>/ajax/cari_penduduk.php', {q: q, jk: 'P'}, function(res) {
       var box = $('#hasilCari').empty();
       if (!res.data || !res.data.length) {
-        box.append('<div class="list-group-item text-muted">Tidak ditemukan. Daftarkan dulu di Data Keluarga sebagai anggota.</div>').show();
+        box.append('<div class="list-group-item text-muted">Tidak ditemukan. Silakan isi form manual di bawah.</div>').show();
         return;
       }
       res.data.forEach(function(p) {
@@ -235,8 +232,11 @@ $('#cariPenduduk').on('input', function() {
           $('#f_nik').val(p.nik||'');
           $('#f_nama').val(p.nama||'');
           $('#f_tempat').val(p.tempat_lahir||'');
-          $('#tgl_lahir_ibu').val(p.tanggal_lahir||'');
-          if (typeof hitungUmur === 'function') hitungUmur(p.tanggal_lahir,'#umur_ibu');
+          var tglIbu = (typeof OpenSID_normTgl === 'function') ? OpenSID_normTgl(p.tanggal_lahir) : (p.tanggal_lahir||'');
+          $('#tgl_lahir_ibu').val(tglIbu);
+          if (typeof hitungUmur === 'function') hitungUmur(tglIbu,'#umur_ibu');
+          if (typeof OpenSID_setPendidikan === 'function') OpenSID_setPendidikan($('select[name="pendidikan"]'), p.pendidikan);
+          if (typeof OpenSID_setPekerjaan === 'function') OpenSID_setPekerjaan($('select[name="pekerjaan"]'), p.pekerjaan);
           $('#f_hp').val(p.no_hp||'');
           $('#f_dusun').val(p.dusun||'');
           $('#f_rt').val(p.rt||'');
@@ -266,11 +266,15 @@ $('#cariPenduduk').on('input', function() {
                 $('#f_nama_suami').val(sr.data.nama || '');
                 $('#f_nik_suami').val(sr.data.nik || '');
                 if (sr.data.pekerjaan) {
-                  var $pek = $('select[name="pekerjaan_suami"]');
-                  if ($pek.find('option').filter(function(){ return $(this).val() === sr.data.pekerjaan || $(this).text() === sr.data.pekerjaan; }).length) {
-                    $pek.val(sr.data.pekerjaan).trigger('change');
+                  if (typeof OpenSID_setPekerjaan === 'function') {
+                    OpenSID_setPekerjaan($('select[name="pekerjaan_suami"]'), sr.data.pekerjaan);
                   } else {
-                    $pek.append($('<option>').val(sr.data.pekerjaan).text(sr.data.pekerjaan)).val(sr.data.pekerjaan).trigger('change');
+                    var $pek = $('select[name="pekerjaan_suami"]');
+                    if ($pek.find('option').filter(function(){ return $(this).val() === sr.data.pekerjaan || $(this).text() === sr.data.pekerjaan; }).length) {
+                      $pek.val(sr.data.pekerjaan).trigger('change');
+                    } else {
+                      $pek.append($('<option>').val(sr.data.pekerjaan).text(sr.data.pekerjaan)).val(sr.data.pekerjaan).trigger('change');
+                    }
                   }
                 }
                 if (sr.data.no_hp) $('input[name="no_hp_suami"]').val(sr.data.no_hp);

@@ -67,16 +67,11 @@ $nomor = generateNomorPeserta('LNS', 'lansia');
       <h5 class="mb-0"><i class="fas fa-search me-2"></i>Pilih dari Data Penduduk</h5>
     </div>
     <div class="card-body">
-      <p class="text-muted small mb-2">Cari warga yang sudah terdaftar. Identitas terisi otomatis.</p>
+      <p class="text-muted small mb-2">Isi manual, atau cari warga yang sudah terdaftar agar identitas terisi otomatis.</p>
       <div class="row g-2">
-        <div class="col-md-8 position-relative">
-          <input type="text" id="cariPenduduk" class="form-control form-control-lg" placeholder="Ketik nama..." autocomplete="off">
+        <div class="col-12 position-relative">
+          <input type="text" id="cariPenduduk" class="form-control form-control-lg" placeholder="Ketik nama... (opsional, atau langsung isi form di bawah)" autocomplete="off">
           <div id="hasilCari" class="list-group shadow border" style="position:absolute;left:0;right:0;z-index:2000;max-height:280px;overflow-y:auto;display:none;background:#fff;"></div>
-        </div>
-        <div class="col-md-4">
-          <a href="<?= APP_URL ?>/modules/penduduk/tambah.php" class="btn btn-outline-secondary w-100" target="_blank">
-            <i class="fas fa-user-plus me-1"></i>Belum ada? Daftarkan dulu
-          </a>
         </div>
       </div>
       <div id="infoTerpilih" class="alert alert-success mt-3 mb-0 d-none">
@@ -102,11 +97,11 @@ $nomor = generateNomorPeserta('LNS', 'lansia');
           </div>
           <div class="col-md-6">
             <label class="form-label fw-semibold">NIK</label>
-            <input type="text" name="nik" id="f_nik" class="form-control" placeholder="Otomatis dari penduduk" maxlength="16" readonly>
+            <input type="text" name="nik" id="f_nik" class="form-control" placeholder="16 digit NIK" maxlength="16">
           </div>
           <div class="col-md-8">
             <label class="form-label fw-semibold">Nama Lengkap <span class="text-danger">*</span></label>
-            <input type="text" name="nama" id="f_nama" class="form-control" required readonly>
+            <input type="text" name="nama" id="f_nama" class="form-control" placeholder="Nama lengkap" required>
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Jenis Kelamin <span class="text-danger">*</span></label>
@@ -118,11 +113,11 @@ $nomor = generateNomorPeserta('LNS', 'lansia');
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Tempat Lahir</label>
-            <input type="text" name="tempat_lahir" id="f_tempat" class="form-control" readonly>
+            <input type="text" name="tempat_lahir" id="f_tempat" class="form-control" placeholder="Kota tempat lahir">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Tanggal Lahir <span class="text-danger">*</span></label>
-            <input type="date" name="tanggal_lahir" id="f_tgl" class="form-control" required readonly>
+            <input type="date" name="tanggal_lahir" id="f_tgl" class="form-control" required onchange="try{hitungUmur(this.value,'#umur_display')}catch(e){}">
           </div>
           <div class="col-md-4">
             <label class="form-label fw-semibold">Umur (Otomatis)</label>
@@ -184,11 +179,11 @@ $nomor = generateNomorPeserta('LNS', 'lansia');
 $extra_js = '
 <script>
 function isiFormPenduduk(p) {
-  $("#f_nik").val(p.nik || "").prop("readonly", true);
-  $("#f_nama").val(p.nama || "").prop("readonly", true);
+  $("#f_nik").val(p.nik || "");
+  $("#f_nama").val(p.nama || "");
   $("#f_jk").val(p.jenis_kelamin || "");
   $("#f_tempat").val(p.tempat_lahir || "");
-  $("#f_tgl").val(p.tanggal_lahir || "");
+  $("#f_tgl").val((typeof OpenSID_normTgl === "function") ? OpenSID_normTgl(p.tanggal_lahir) : (p.tanggal_lahir || ""));
   $("#umur_display").val((p.umur != null && p.umur !== "") ? (p.umur + " Tahun") : "");
   $("#f_hp").val(p.no_hp || "");
   $("#f_pekerjaan").val(p.pekerjaan || "");
@@ -217,7 +212,7 @@ $(function () {
         .done(function (res) {
           $hasil.empty();
           if (!res.data || !res.data.length) {
-            $hasil.append(\'<div class="list-group-item text-muted small">Tidak ditemukan. Daftarkan di Data Penduduk/Keluarga.</div>\').show();
+            $hasil.append(\'<div class="list-group-item text-muted small">Tidak ditemukan. Silakan isi form manual di bawah.</div>\').show();
             return;
           }
           res.data.forEach(function (p) {
@@ -244,8 +239,8 @@ $(function () {
   $("#formLansia").on("submit", function (e) {
     e.preventDefault();
     if (!$("#f_nama").val()) {
-      if (typeof Swal !== "undefined") Swal.fire("Pilih Penduduk", "Ketik nama lalu pilih dari daftar.", "warning");
-      else alert("Pilih penduduk dulu");
+      if (typeof Swal !== "undefined") Swal.fire("Nama kosong", "Isi nama lansia dulu (pilih dari daftar atau ketik manual).", "warning");
+      else alert("Isi nama lansia dulu");
       return;
     }
     if (typeof showLoading === "function") showLoading("Menyimpan...");

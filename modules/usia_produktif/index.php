@@ -101,20 +101,6 @@ $canInput = function_exists('canInput') ? canInput() : true;
   </div></div>
 </section>
 <section class="content"><div class="container-fluid">
-  <div class="alert alert-info border-0 shadow-sm">
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <div class="flex-grow-1">
-        <strong><i class="fas fa-info-circle me-1"></i>Standar sasaran:</strong>
-        Usia Produktif = usia <strong><?= $MIN_TAHUN ?>–<?= $MAX_TAHUN ?> tahun</strong>.
-        Data dari <strong>OpenSID</strong>. Tambah manual hanya jika belum ada di OpenSID.
-      </div>
-      <?php if (!$opensid_ok): ?>
-        <span class="badge bg-warning text-dark">OpenSID tidak terhubung</span>
-      <?php else: ?>
-        <span class="badge bg-success">OpenSID terhubung</span>
-      <?php endif; ?>
-    </div>
-  </div>
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3"><div class="card border-0 shadow-sm"><div class="card-body py-2 text-center">
       <div class="fs-4 fw-bold text-primary"><?= number_format($total) ?></div>

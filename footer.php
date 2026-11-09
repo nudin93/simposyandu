@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <!-- Custom JS -->
-<script src="<?= APP_URL ?>/assets/js/custom.js?v=20260928"></script>
+<script src="<?= APP_URL ?>/assets/js/custom.js?v=20261110"></script>
 <?php if (isset($extra_js)) echo $extra_js; ?>
 </body>
 </html>

@@ -90,6 +90,30 @@ $total_p = count(array_filter($rows, function($r){ return ($r['jenis_kelamin']??
 $total_terdaftar = count(array_filter($rows, function($r){ return !empty($r['terdaftar']); }));
 $total_manual = count(array_filter($rows, function($r){ return $r['sumber'] === 'lokal'; }));
 $canInput = function_exists('canInput') ? canInput() : true;
+
+// Pagination ala Penduduk: cari + halaman server (tanpa nomor berurut)
+$search = trim($_GET['q'] ?? '');
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = max(10, min(100, (int)($_GET['per_page'] ?? 10)));
+$offset = ($page - 1) * $perPage;
+if ($search !== '') {
+    $sq = strtolower($search);
+    $rows = array_values(array_filter($rows, function ($r) use ($sq) {
+        foreach (['nama', 'nik', 'nomor_peserta', 'dusun'] as $k) {
+            if (isset($r[$k]) && stripos((string)$r[$k], $sq) !== false) return true;
+        }
+        return false;
+    }));
+}
+$ftotal = count($rows);
+$totalPages = max(1, (int)ceil($ftotal / max(1, $perPage)));
+$pageRows = array_slice($rows, $offset, $perPage);
+if (!function_exists('buildQs')) {
+    function buildQs(array $params): string {
+        return http_build_query(array_filter($params, fn($v) => $v !== '' && $v !== null));
+    }
+}
+$baseQs = ['q' => $search, 'per_page' => $perPage];
 ?>
 <section class="content-header">
   <div class="container-fluid"><div class="row mb-2">
@@ -101,20 +125,6 @@ $canInput = function_exists('canInput') ? canInput() : true;
   </div></div>
 </section>
 <section class="content"><div class="container-fluid">
-  <div class="alert alert-info border-0 shadow-sm">
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <div class="flex-grow-1">
-        <strong><i class="fas fa-info-circle me-1"></i>Standar sasaran:</strong>
-        Data Lansia = usia <strong><?= $MIN_TAHUN ?>–<?= $MAX_TAHUN ?> tahun</strong>.
-        Data dari <strong>OpenSID</strong>. Tambah manual hanya jika belum ada di OpenSID.
-      </div>
-      <?php if (!$opensid_ok): ?>
-        <span class="badge bg-warning text-dark">OpenSID tidak terhubung</span>
-      <?php else: ?>
-        <span class="badge bg-success">OpenSID terhubung</span>
-      <?php endif; ?>
-    </div>
-  </div>
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3"><div class="card border-0 shadow-sm"><div class="card-body py-2 text-center">
       <div class="fs-4 fw-bold text-warning"><?= number_format($total) ?></div>
@@ -140,9 +150,36 @@ $canInput = function_exists('canInput') ? canInput() : true;
       <a href="<?= APP_URL ?>/modules/lansia/tambah.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-plus me-1"></i>Tambah Manual</a>
       <?php endif; ?>
     </div>
-    <div class="card-body"><div class="table-responsive">
-      <table class="table table-hover datatable align-middle" style="width:100%">
-        <thead class="table-light">
+    <div class="card-header bg-light py-2">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Cari:</span>
+            <input type="text" name="q" class="form-control" placeholder="Nama / NIK / No. Peserta..." value="<?= htmlspecialchars($search) ?>">
+          </div>
+        </div>
+        <div class="col-9 col-md-3">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Tampilkan</span>
+            <select name="per_page" class="form-select" onchange="this.form.submit()">
+              <?php foreach ([10,25,50,100] as $pp): ?>
+              <option value="<?= $pp ?>" <?= $perPage===$pp?'selected':'' ?>><?= $pp ?></option>
+              <?php endforeach; ?>
+            </select>
+            <span class="input-group-text">entri</span>
+          </div>
+        </div>
+        <div class="col-3 col-md-1">
+          <button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="col-12 col-md-3 text-md-end">
+          <span class="text-muted small"><?= number_format($ftotal) ?> lansia</span>
+        </div>
+      </form>
+    </div>
+    <div class="card-body p-0"><div class="table-responsive opensid-scroll">
+      <table class="table table-hover align-middle table-sm table-striped opensid-table" style="width:100%">
+        <thead class="table-primary text-nowrap">
           <tr>
             <th>No</th><th>Nama</th><th>L/P</th><th>Tgl Lahir</th><th>Umur</th><th>NIK</th>
             
@@ -150,11 +187,11 @@ $canInput = function_exists('canInput') ? canInput() : true;
           </tr>
         </thead>
         <tbody>
-        <?php if (empty($rows)): ?>
-          <tr><td colspan="12" class="text-center text-muted py-4">Tidak ada data usia <?= $MIN_TAHUN ?>–<?= $MAX_TAHUN ?> tahun.</td></tr>
-        <?php else: foreach ($rows as $i => $r): ?>
+        <?php if (empty($pageRows)): ?>
+          <tr><td colspan="12" class="text-center text-muted py-4">Tidak ada data usia <?= $MIN_TAHUN ?>–<?= $MAX_TAHUN ?> tahun.<?php if ($search !== ''): ?> Coba kata kunci lain.<?php endif; ?></td></tr>
+        <?php else: foreach ($pageRows as $i => $r): ?>
           <tr>
-            <td><?= $i+1 ?></td>
+            <td><?= $offset + $i + 1 ?></td>
             <td>
               <div class="fw-semibold"><?= htmlspecialchars($r['nama']) ?></div>
               <?php if ($r['nomor_peserta']): ?><small class="text-muted"><?= htmlspecialchars($r['nomor_peserta']) ?></small><?php endif; ?>
@@ -178,7 +215,26 @@ $canInput = function_exists('canInput') ? canInput() : true;
         <?php endforeach; endif; ?>
         </tbody>
       </table>
-    </div></div>
+    </div>
+    <?php if ($ftotal > 0): ?>
+    <div class="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-light gap-2">
+      <div class="text-muted small">
+        Menampilkan <?= $offset + 1 ?> sampai <?= min($offset + $perPage, $ftotal) ?> dari <?= number_format($ftotal) ?> entri
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <?php
+        $qs = buildQs($baseQs);
+        $pageBase = $qs ? "?$qs" : "?";
+        ?>
+        <a class="btn btn-sm btn-outline-primary <?= $page <= 1 ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= max(1, $page - 1) ?>">Sebelumnya</a>
+        <span class="small text-muted">Halaman</span>
+        <input type="number" class="form-control form-control-sm page-jump" style="width:74px" min="1" max="<?= $totalPages ?>" value="<?= $page ?>" data-base="<?= htmlspecialchars($pageBase) ?>" aria-label="Ke halaman">
+        <span class="small text-muted">/ <?= number_format($totalPages) ?></span>
+        <a class="btn btn-sm btn-outline-primary <?= $page >= $totalPages ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= min($totalPages, $page + 1) ?>">Selanjutnya</a>
+      </div>
+    </div>
+    <?php endif; ?>
+    </div>
   </div>
 </div></section>
 <?php

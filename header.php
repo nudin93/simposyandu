@@ -108,7 +108,7 @@ $dark = !empty($pengaturan['dark_mode']) ? 'dark-mode' : '';
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/custom.css?v=20260928">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/custom.css?v=20261109">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/pro-modern.css?v=20260928">
   <style id="sidepush-critical">
   .main-sidebar{transition:transform .3s ease,width .3s ease!important}

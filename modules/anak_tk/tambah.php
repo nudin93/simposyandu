@@ -49,7 +49,7 @@ require_once __DIR__ . '/../../includes/header.php';
   for(var k=0;k<links.length;k++){links[k].onclick=function(e){e.preventDefault();var p=window._lastCari[+this.getAttribute("data-i")];
    document.getElementById("id_os").value=p.id_penduduk||"";document.getElementById("st_int").value=p.id_penduduk?"terhubung":"manual";
    document.getElementById("nik").value=p.nik||"";document.getElementById("no_kk").value=p.no_kk||"";document.getElementById("nama").value=p.nama||"";document.getElementById("jk").value=p.jenis_kelamin||"L";
-   document.getElementById("tgl").value=p.tanggal_lahir||"";document.getElementById("dusun").value=p.dusun||"";document.getElementById("rt").value=p.rt||"";document.getElementById("rw").value=p.rw||"";document.getElementById("alamat").value=p.alamat||"";
+   document.getElementById("tgl").value=(typeof OpenSID_normTgl==="function")?OpenSID_normTgl(p.tanggal_lahir):(p.tanggal_lahir||"");document.getElementById("dusun").value=p.dusun||"";document.getElementById("rt").value=p.rt||"";document.getElementById("rw").value=p.rw||"";document.getElementById("alamat").value=p.alamat||"";
    h.style.display="none";c.value=p.nama;};}
  });});};
  document.getElementById("f").onsubmit=function(e){e.preventDefault();ajaxSubmitForm(f,{redirect:"index.php"});};

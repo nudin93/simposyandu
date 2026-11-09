@@ -47,6 +47,7 @@ $openBayi     = in_array($folder, ['bayi','pemeriksaan_bayi']);
 $openBalita   = in_array($folder, ['balita','pemeriksaan_balita','imunisasi','vitamin']);
 $openRemaja   = in_array($folder, ['remaja','pemeriksaan_remaja']);
 $openTK       = in_array($folder, ['anak_tk','pemeriksaan_anak_tk']);
+$openSD       = in_array($folder, ['anak_sd','pemeriksaan_anak_sd']);
 $openUP       = in_array($folder, ['usia_produktif','pemeriksaan_dewasa']);
 $openLansia   = in_array($folder, ['lansia','pemeriksaan_lansia']);
 $openKB       = ($folder === 'kb');
@@ -59,6 +60,8 @@ $openArtikel  = ($folder === 'artikel');
 $opensidOk = function_exists('opensid_available') ? opensid_available() : false;
 $appName = htmlspecialchars($pengaturan['nama_aplikasi'] ?? 'SIMPOSYANDU');
 $u = function_exists('currentUser') ? currentUser() : [];
+/* STANDAR KADER: tanpa sidebar di semua halaman modul. Guard role saja, user lain tidak berubah. */
+if (($u['role'] ?? '') === 'kader') { return; }
 $isKD = function_exists('isKepalaDesa') && isKepalaDesa();
 $canIn = function_exists('canInput') ? canInput() : true;
 $canMg = function_exists('canManage') ? canManage() : (function_exists('isAdmin') && isAdmin());
@@ -85,7 +88,50 @@ $__u_foto = $u['foto'] ?? ($user['foto'] ?? '');
 $__avatar_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='%23ccfbf1'/><circle cx='32' cy='24' r='11' fill='%230f766e'/><path d='M10 56c4-12 12-17 22-17s18 5 22 17' fill='%230f766e'/></svg>";
 $__u_foto_url = $__u_foto ? APP_URL . '/uploads/kader/' . rawurlencode($__u_foto) : $__avatar_svg;
 ?>
-<aside class="main-sidebar sidebar-light-primary elevation-1 opensid-sidebar">
+<?php
+$isAdminView = (($u['role'] ?? '') === 'admin');
+?>
+<style id="sidebar-admin-dark">
+/* Sidebar HITAM khusus ADMIN (bidan/kepala desa/kader tidak berubah).
+   Tulisan putih agar jelas bedanya. */
+.opensid-sidebar.admin-dark{background:#000!important;border-right:1px solid #000!important;}
+.opensid-sidebar.admin-dark .brand-link{background:#000!important;color:#fff!important;border-bottom:1px solid rgba(255,255,255,.15)!important;}
+.opensid-sidebar.admin-dark .brand-link .brand-text,
+.opensid-sidebar.admin-dark .brand-link .brand-text small,
+.opensid-sidebar.admin-dark .brand-link .brand-icon{color:#fff!important;}
+.opensid-sidebar.admin-dark .sidebar{background:#000!important;}
+.opensid-sidebar.admin-dark .user-panel{background:#000!important;border-bottom:1px solid rgba(255,255,255,.15)!important;}
+.opensid-sidebar.admin-dark .user-panel .info a{color:#fff!important;}
+.opensid-sidebar.admin-dark .user-panel .info small{color:rgba(255,255,255,.65)!important;}
+.opensid-sidebar.admin-dark .nav-header{color:rgba(255,255,255,.55)!important;background:transparent!important;}
+.opensid-sidebar.admin-dark .nav-sidebar .nav-item > .nav-link{color:#fff!important;background:transparent!important;}
+.opensid-sidebar.admin-dark .nav-sidebar .nav-item > .nav-link p{color:#fff!important;}
+.opensid-sidebar.admin-dark .nav-sidebar .nav-icon{color:rgba(255,255,255,.85)!important;}
+.opensid-sidebar.admin-dark .nav-sidebar .nav-link .right,
+.opensid-sidebar.admin-dark .nav-sidebar .nav-link .fa-angle-left{color:rgba(255,255,255,.7)!important;}
+.opensid-sidebar.admin-dark .nav-sidebar .nav-item > .nav-link:hover{background:rgba(255,255,255,.14)!important;color:#fff!important;}
+.opensid-sidebar.admin-dark .nav-sidebar .nav-item > .nav-link:hover p,
+.opensid-sidebar.admin-dark .nav-sidebar .nav-item > .nav-link:hover .nav-icon{color:#fff!important;}
+.opensid-sidebar.admin-dark .nav-sidebar > .nav-item > .nav-link.active{background:#fff!important;color:#000!important;font-weight:700;}
+.opensid-sidebar.admin-dark .nav-sidebar > .nav-item > .nav-link.active p,
+.opensid-sidebar.admin-dark .nav-sidebar > .nav-item > .nav-link.active .nav-icon,
+.opensid-sidebar.admin-dark .nav-sidebar > .nav-item > .nav-link.active .right{color:#000!important;}
+.opensid-sidebar.admin-dark .nav-treeview{background:transparent!important;}
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link{color:rgba(255,255,255,.88)!important;}
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link p{color:inherit!important;}
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link:hover{background:rgba(255,255,255,.14)!important;color:#fff!important;}
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link:hover .nav-icon{color:#fff!important;}
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link.active{background:#fff!important;color:#000!important;font-weight:700;}
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link.active p,
+.opensid-sidebar.admin-dark .nav-treeview > .nav-item > .nav-link.active .nav-icon{color:#000!important;}
+.opensid-sidebar.admin-dark .nav-treeview .nav-icon{color:rgba(255,255,255,.7)!important;}
+/* Kotak "Cari menu..." harus tetap tampil di sidebar hitam */
+.opensid-sidebar.admin-dark .sidebar-search .form-control{background:#1a1a1a!important;border:1px solid rgba(255,255,255,.3)!important;color:#fff!important;}
+.opensid-sidebar.admin-dark .sidebar-search .form-control::placeholder{color:rgba(255,255,255,.55)!important;}
+.opensid-sidebar.admin-dark .sidebar-search .input-group-text{background:#1a1a1a!important;border:1px solid rgba(255,255,255,.3)!important;color:#fff!important;}
+.opensid-sidebar.admin-dark .sidebar-foot{color:rgba(255,255,255,.6)!important;}
+</style>
+<aside class="main-sidebar sidebar-light-primary elevation-1 opensid-sidebar<?= $isAdminView ? ' admin-dark' : '' ?>">
   <a href="<?= APP_URL ?>/dashboard.php" class="brand-link">
     <?php if ($__logo_url): ?>
       <img src="<?= $__logo_url ?>" alt="Logo" class="brand-image">
@@ -222,6 +268,17 @@ $__u_foto_url = $__u_foto ? APP_URL . '/uploads/kader/' . rawurlencode($__u_foto
           <ul class="nav nav-treeview" style="<?= $openTK ? 'display:block' : 'display:none' ?>">
             <?php if (cv('anak_tk')): ?><li class="nav-item"><a href="<?= APP_URL ?>/modules/anak_tk/index.php" class="nav-link <?= navActive($folder==='anak_tk') ?>"><i class="nav-icon far fa-circle"></i><p>Data Anak TK</p></a></li><?php endif; ?>
             <?php if (cv('pemeriksaan_anak_tk')): ?><li class="nav-item"><a href="<?= APP_URL ?>/modules/pemeriksaan_anak_tk/index.php" class="nav-link <?= navActive($folder==='pemeriksaan_anak_tk') ?>"><i class="nav-icon far fa-circle"></i><p>Pemeriksaan</p></a></li><?php endif; ?>
+          </ul>
+        </li>
+
+        <li class="nav-item <?= menuOpen($openSD) ?>">
+          <a href="#" class="nav-link <?= navActive($openSD) ?>" onclick="return toggleMenu(this)">
+            <i class="nav-icon fas fa-book-reader"></i>
+            <p>Anak SD (6-12 thn) <i class="right fas fa-angle-left"></i></p>
+          </a>
+          <ul class="nav nav-treeview" style="<?= $openSD ? 'display:block' : 'display:none' ?>">
+            <?php if (cv('anak_sd')): ?><li class="nav-item"><a href="<?= APP_URL ?>/modules/anak_sd/index.php" class="nav-link <?= navActive($folder==='anak_sd') ?>"><i class="nav-icon far fa-circle"></i><p>Data Anak SD</p></a></li><?php endif; ?>
+            <?php if (cv('pemeriksaan_anak_sd')): ?><li class="nav-item"><a href="<?= APP_URL ?>/modules/pemeriksaan_anak_sd/index.php" class="nav-link <?= navActive($folder==='pemeriksaan_anak_sd') ?>"><i class="nav-icon far fa-circle"></i><p>Pemeriksaan</p></a></li><?php endif; ?>
           </ul>
         </li>
 

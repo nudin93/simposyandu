@@ -84,6 +84,8 @@ $app_name = $pengaturan['nama_aplikasi'] ?? 'SIMPOSYANDU';
 $posyandu = $pengaturan['nama_posyandu'] ?? 'Posyandu';
 $warna = $pengaturan['warna_tema'] ?? 'blue';
 $dark = !empty($pengaturan['dark_mode']) ? 'dark-mode' : '';
+/* STANDAR KADER: tanpa sidebar — hanya topbar simpel + bottom nav (footer). User lain tidak berubah. */
+$__isKaderView = (($user['role'] ?? '') === 'kader');
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -118,7 +120,7 @@ $dark = !empty($pengaturan['dark_mode']) ? 'dark-mode' : '';
   <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
   <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/custom.css?v=20260928e">
+  <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/custom.css?v=20261109">
   <link rel="stylesheet" href="<?= APP_URL ?>/assets/css/pro-modern.css?v=20260928e">
   <style id="sidepush-critical">
   /* Sidebar SELALU fixed — tidak ikut scroll halaman */
@@ -149,8 +151,25 @@ $dark = !empty($pengaturan['dark_mode']) ? 'dark-mode' : '';
     body.sidebar-open::before{display:none!important}
   }
   </style>
+  <?php if (!empty($__isKaderView)): ?>
+  <style id="kader-no-sidebar">
+  /* Kader: kunci tanpa sidebar di semua halaman modul */
+  .main-sidebar,.opensid-sidebar{display:none!important;}
+  body .content-wrapper,body .main-footer,body .main-header{margin-left:0!important;transform:none!important;}
+  #btn-toggle-sidebar{display:none!important;}
+  body .content-wrapper{padding-bottom:86px;}
+  </style>
+  <?php endif; ?>
+  <style id="hasil-cari-fix">
+  /* Dropdown hasil pencarian nama HARUS TAMPIL (semua peran).
+     Kartu form memakai overflow:hidden sehingga hasil yang
+     posisinya absolute terpotong/tidak kelihatan. */
+  .card:has(#hasilCari),.card:has(#hasilCariBalita),.card:has(#hasilCariKK),.card:has(#hasil){overflow:visible!important;}
+  #hasilCari,#hasilCariBalita,#hasilCariKK,#hasil{z-index:3000!important;background:#fff!important;border:1px solid #e2e8f0!important;border-radius:12px!important;box-shadow:0 10px 28px rgba(15,23,42,.18)!important;}
+  #hasilCari .list-group-item,#hasilCariBalita .list-group-item,#hasilCariKK .list-group-item,#hasil .list-group-item{color:#1e293b!important;}
+  </style>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed text-sm <?= $dark ?>">
+<body class="hold-transition sidebar-mini layout-fixed text-sm <?= $dark ?><?= !empty($__isKaderView) ? ' kader-no-sidebar' : '' ?>">
 <script>
 /* Definisi awal agar tombol garis-3 selalu aktif walau footer belum termuat */
 window.toggleSidePush = window.toggleSidePush || function() {
@@ -173,17 +192,19 @@ window.toggleSidePush = window.toggleSidePush || function() {
 
 <!-- Navbar - OpenSID style (solid blue) -->
 <nav class="main-header navbar navbar-expand navbar-dark opensid-navbar">
+  <?php if (empty($__isKaderView)): ?>
   <ul class="navbar-nav">
     <li class="nav-item">
       <a class="nav-link btn-toggle-sidebar" href="#" role="button" onclick="return toggleSidePush()" title="Menu" id="btn-toggle-sidebar"><i class="fas fa-bars"></i></a>
     </li>
   </ul>
-  <ul class="navbar-nav mx-auto">
+  <?php endif; ?>
+  <ul class="navbar-nav <?= !empty($__isKaderView) ? 'ms-2' : 'mx-auto' ?>">
     <li class="nav-item">
-      <a href="<?= APP_URL ?>/dashboard.php" class="nav-link opensid-brand"><?= $app_name ?></a>
+      <a href="<?= APP_URL ?><?= !empty($__isKaderView) ? '/kader_home.php' : '/dashboard.php' ?>" class="nav-link opensid-brand"><?= $app_name ?></a>
     </li>
   </ul>
-  <ul class="navbar-nav">
+  <ul class="navbar-nav <?= !empty($__isKaderView) ? 'ms-auto' : '' ?>">
 <?php
 $_avatar_svg = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='32' fill='%23ccfbf1'/><circle cx='32' cy='24' r='11' fill='%230f766e'/><path d='M10 56c4-12 12-17 22-17s18 5 22 17' fill='%230f766e'/></svg>";
 $_u_foto_url = !empty($user['foto']) ? APP_URL . '/uploads/kader/' . rawurlencode($user['foto']) : $_avatar_svg;

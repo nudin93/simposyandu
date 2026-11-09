@@ -23,6 +23,10 @@ if ($id > 0) {
 
 // Jika belum pilih anak TK → tampilkan daftar pilihan
 if (!$r) {
+    $filterKelas = '';
+    $frPeriksa = trim($_GET['kelas'] ?? '');
+    if (preg_match('/^(tk\s*)?a$/i', $frPeriksa)) { $filterKelas = 'TK A'; }
+    elseif (preg_match('/^(tk\s*)?b$/i', $frPeriksa)) { $filterKelas = 'TK B'; }
     $daftar = [];
     try {
         $daftar = fetchAll("SELECT id, nomor_peserta, nama_lengkap, jenis_kelamin, nik, kategori, kelas,
@@ -33,6 +37,11 @@ if (!$r) {
             LIMIT 300") ?: [];
     } catch (Throwable $e) {
         $daftar = [];
+    }
+    if ($filterKelas !== '') {
+        $daftar = array_values(array_filter($daftar, function($x) use ($filterKelas) {
+            return trim((string)($x['kelas'] ?? '')) === $filterKelas;
+        }));
     }
     ?>
 <section class="content-header">
@@ -46,14 +55,18 @@ if (!$r) {
   </div></div>
 </section>
 <section class="content"><div class="container-fluid">
-  <div class="alert alert-info border-0 shadow-sm">
-    <i class="fas fa-info-circle me-1"></i>
-    Pilih anak TK yang akan diperiksa. Jika belum ada di daftar, daftar dulu dari
-    <a href="<?= APP_URL ?>/modules/anak_tk/index.php" class="fw-semibold">Data Anak TK</a>
-    (tombol <strong>Daftarkan</strong>).
-  </div>
   <div class="card border-0 shadow-sm">
-    <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-users me-2 text-warning"></i>Pilih Anak TK Terdaftar</h5></div>
+    <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <h5 class="mb-0"><i class="fas fa-users me-2 text-warning"></i>Pilih Anak TK Terdaftar</h5>
+      <div class="d-flex align-items-center gap-2">
+        <label class="small text-muted mb-0" for="pilihKelasPeriksaTK">Pilih Kelas:</label>
+        <select id="pilihKelasPeriksaTK" class="form-select form-select-sm" style="width:auto" onchange="if(this.value){location.href='tambah.php?kelas='+encodeURIComponent(this.value)}else{location.href='tambah.php'}">
+          <option value="">Semua Kelas</option>
+          <option value="TK A" <?= $filterKelas==='TK A'?'selected':'' ?>>TK A</option>
+          <option value="TK B" <?= $filterKelas==='TK B'?'selected':'' ?>>TK B</option>
+        </select>
+      </div>
+    </div>
     <div class="card-body table-responsive">
       <table class="table table-hover datatable align-middle" style="width:100%">
         <thead class="table-light">

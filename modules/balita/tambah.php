@@ -498,10 +498,12 @@ function isiOtomatisBalita(p) {
   // Orang tua
   $('#f_nama_ayah').val(p.nama_ayah || '');
   $('#f_nik_ayah').val(p.nik_ayah || p.ayah_nik || '');
-  $('#f_pek_ayah').val(p.pekerjaan_ayah || p.pekerjaan || '').trigger('change');
+  if (typeof OpenSID_setPekerjaan === 'function') OpenSID_setPekerjaan($('#f_pek_ayah'), p.pekerjaan_ayah || p.pekerjaan || '');
+  else $('#f_pek_ayah').val(p.pekerjaan_ayah || p.pekerjaan || '').trigger('change');
   $('#f_nama_ibu').val(p.nama_ibu || '');
   $('#f_nik_ibu').val(p.nik_ibu || p.ibu_nik || '');
-  $('#f_pek_ibu').val(p.pekerjaan_ibu || '').trigger('change');
+  if (typeof OpenSID_setPekerjaan === 'function') OpenSID_setPekerjaan($('#f_pek_ibu'), p.pekerjaan_ibu || '');
+  else $('#f_pek_ibu').val(p.pekerjaan_ibu || '').trigger('change');
   $('input[name="no_hp"]').val(p.no_hp || p.telepon || '');
 
   // Alamat

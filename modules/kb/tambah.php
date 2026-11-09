@@ -257,7 +257,7 @@ $(function(){
             $("#f_nik").val(p.nik||"");
             $("#f_nokk").val(p.no_kk||"");
             $("#f_jk").val(p.jenis_kelamin||"P");
-            $("#f_tgl").val(p.tanggal_lahir||"");
+            $("#f_tgl").val((typeof OpenSID_normTgl==="function") ? OpenSID_normTgl(p.tanggal_lahir) : (p.tanggal_lahir||""));
             $input.val(p.nama||"");
             $hasil.hide();
           });

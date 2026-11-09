@@ -37,6 +37,7 @@ $(document).ready(function() {
   initSelect2();
   initDatepicker();
   initDataTable();
+  initPageJump();
   initDraftSave();
 });
 
@@ -161,6 +162,9 @@ function initDataTable() {
   $(".datatable").each(function() {
     var $t = $(this);
     if (!$t.find("thead").length) return;
+    /* Samakan tampilan dengan Data Penduduk/Keluarga */
+    $t.addClass("table-sm table-striped opensid-table");
+    $t.find("thead").removeClass("table-light").addClass("table-primary text-nowrap");
     $t.find("tbody tr").each(function() {
       if ($(this).find("td[colspan]").length) $(this).remove();
     });
@@ -193,14 +197,15 @@ function initDataTable() {
           emptyTable: "Tidak ada data",
           zeroRecords: "Data tidak ditemukan",
           search: "Cari:",
-          lengthMenu: "Tampil _MENU_ data",
-          info: "Menampilkan _START_–_END_ dari _TOTAL_ data",
-          infoEmpty: "Tidak ada data",
-          infoFiltered: "(disaring dari _MAX_ data)",
-          paginate: { first: "Awal", last: "Akhir", next: "›", previous: "‹" }
+          lengthMenu: "Tampilkan _MENU_ entri",
+          info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+          infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+          infoFiltered: "(disaring dari _MAX_ entri)",
+          paginate: { first: "Awal", last: "Akhir", next: "Selanjutnya", previous: "Sebelumnya" }
         },
         pageLength: 10,
-        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+        pagingType: "simple_numbers",
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         order: [],
         columnDefs: [
           { orderable: false, targets: -1 }
@@ -212,6 +217,20 @@ function initDataTable() {
     } catch (err) {
       console.warn("DataTable init skipped:", err);
     }
+  });
+}
+
+/* Pindah halaman ala Penduduk: ketik nomor halaman, tanpa daftar angka */
+function initPageJump() {
+  $(document).on("change", ".page-jump", function() {
+    var max = parseInt($(this).attr("max"), 10) || 1;
+    var v = parseInt($(this).val(), 10) || 1;
+    v = Math.max(1, Math.min(max, v));
+    var base = $(this).data("base") || "?";
+    window.location.href = base + (base.slice(-1) === "?" ? "page=" : "&page=") + v;
+  });
+  $(document).on("keydown", ".page-jump", function(e) {
+    if (e.key === "Enter") { e.preventDefault(); $(this).trigger("change"); }
   });
 }
 

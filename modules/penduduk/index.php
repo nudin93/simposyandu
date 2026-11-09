@@ -348,29 +348,17 @@ $baseQs = [
       <div class="text-muted small">
         Menampilkan <?= $offset + 1 ?> sampai <?= min($offset + $perPage, $total) ?> dari <?= number_format($total) ?> entri
       </div>
-      <nav>
-        <ul class="pagination pagination-sm mb-0">
-          <?php
-          $qs = buildQs($baseQs);
-          $prev = max(1, $page - 1);
-          $next = min($totalPages, $page + 1);
-          ?>
-          <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-            <a class="page-link" href="?<?= $qs ?>&page=<?= $prev ?>">Sebelumnya</a>
-          </li>
-          <?php
-          $start = max(1, $page - 1);
-          $end   = min($totalPages, $page + 1);
-          for ($pg = $start; $pg <= $end; $pg++): ?>
-            <li class="page-item <?= $pg == $page ? 'active' : '' ?>">
-              <a class="page-link" href="?<?= $qs ?>&page=<?= $pg ?>"><?= $pg ?></a>
-            </li>
-          <?php endfor; ?>
-          <li class="page-item <?= $page >= $totalPages ? 'disabled' : '' ?>">
-            <a class="page-link" href="?<?= $qs ?>&page=<?= $next ?>">Selanjutnya</a>
-          </li>
-        </ul>
-      </nav>
+      <div class="d-flex align-items-center gap-2">
+        <?php
+        $qs = buildQs($baseQs);
+        $pageBase = $qs ? "?$qs" : "?";
+        ?>
+        <a class="btn btn-sm btn-outline-primary <?= $page <= 1 ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= max(1, $page - 1) ?>">Sebelumnya</a>
+        <span class="small text-muted">Halaman</span>
+        <input type="number" class="form-control form-control-sm page-jump" style="width:74px" min="1" max="<?= $totalPages ?>" value="<?= $page ?>" data-base="<?= htmlspecialchars($pageBase) ?>" aria-label="Ke halaman">
+        <span class="small text-muted">/ <?= number_format($totalPages) ?></span>
+        <a class="btn btn-sm btn-outline-primary <?= $page >= $totalPages ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= min($totalPages, $page + 1) ?>">Selanjutnya</a>
+      </div>
     </div>
     <?php endif; ?>
   </div>

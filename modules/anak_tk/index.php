@@ -20,7 +20,13 @@ require_once __DIR__ . '/../../includes/header.php';
 
 $MIN_TAHUN = 3;
 $MAX_TAHUN = 7;
-$filterKelas = trim($_GET['kelas'] ?? '');
+$filterRaw = trim($_GET['kelas'] ?? '');
+$filterKelas = '';
+$frLow = strtolower($filterRaw);
+if ($frLow === 'lulus') { $filterKelas = 'Lulus'; }
+elseif (preg_match('/^(tk\s*)?a$/i', $filterRaw)) { $filterKelas = 'TK A'; }
+elseif (preg_match('/^(tk\s*)?b$/i', $filterRaw)) { $filterKelas = 'TK B'; }
+elseif ($filterRaw === 'TK A' || $filterRaw === 'TK B') { $filterKelas = $filterRaw; }
 $showAll = isset($_GET['tampil']) && $_GET['tampil'] === 'semua';
 
 $lokal = [];
@@ -51,6 +57,7 @@ foreach ($berkelas as $b) {
     if ($filterKelas === 'TK A' && ($kls !== 'TK A' || $lulus)) continue;
     if ($filterKelas === 'TK B' && ($kls !== 'TK B' || $lulus)) continue;
     if ($filterKelas === 'Lulus' && !$lulus) continue;
+    if ($filterKelas === '' && $lulus) continue; // "Semua" = aktif saja
     $rows[] = $b;
 }
 
@@ -84,16 +91,6 @@ $__csrf = csrfToken();
   </div></div>
 </section>
 <section class="content"><div class="container-fluid">
-  <div class="alert alert-info border-0 shadow-sm">
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <div class="flex-grow-1">
-        <strong><i class="fas fa-info-circle me-1"></i>Berbasis Kelas:</strong>
-        sasaran usia <?= $MIN_TAHUN ?>–<?= $MAX_TAHUN ?> tahun (umur tidak ditampilkan).
-        Anak muncul di daftar <strong>setelah guru memasukkan Kelas</strong> berdasarkan nama anak.
-        Alur: <strong>TK A &rarr; TK B &rarr; Lulus</strong>.
-      </div>
-    </div>
-  </div>
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3"><div class="card border-0 shadow-sm"><div class="card-body py-2 text-center">
       <div class="fs-4 fw-bold text-warning"><?= number_format($totalAktif) ?></div>
@@ -115,16 +112,18 @@ $__csrf = csrfToken();
   <div class="card border-0 shadow-sm">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2 bg-white">
       <h5 class="mb-0"><i class="fas fa-list me-2 text-warning"></i>Daftar Anak TK</h5>
-      <div class="d-flex gap-2 flex-wrap">
-        <div class="btn-group btn-group-sm" role="group">
-          <a href="index.php" class="btn <?= $filterKelas===''?'btn-warning':'btn-outline-warning' ?>">Semua</a>
-          <a href="index.php?kelas=<?= urlencode('TK A') ?>" class="btn <?= $filterKelas==='TK A'?'btn-warning':'btn-outline-warning' ?>">TK A</a>
-          <a href="index.php?kelas=<?= urlencode('TK B') ?>" class="btn <?= $filterKelas==='TK B'?'btn-warning':'btn-outline-warning' ?>">TK B</a>
-          <a href="index.php?kelas=Lulus" class="btn <?= $filterKelas==='Lulus'?'btn-warning':'btn-outline-warning' ?>">Lulus</a>
-        </div>
+      <div class="d-flex gap-2 flex-wrap align-items-center">
+        <label class="small text-muted mb-0" for="pilihKelasTK">Pilih Kelas:</label>
+        <select id="pilihKelasTK" class="form-select form-select-sm" style="width:auto">
+          <option value="">Semua Kelas</option>
+          <option value="TK A" <?= $filterKelas==='TK A'?'selected':'' ?>>TK A</option>
+          <option value="TK B" <?= $filterKelas==='TK B'?'selected':'' ?>>TK B</option>
+          <option value="Lulus" <?= $filterKelas==='Lulus'?'selected':'' ?>>Lulus</option>
+        </select>
         <?php if ($canInput): ?>
         <a href="<?= $__app ?>/modules/anak_tk/tambah.php" class="btn btn-outline-warning btn-sm"><i class="fas fa-plus me-1"></i>Tambah Anak</a>
         <?php endif; ?>
+        <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalKolomTK"><i class="fas fa-columns me-1"></i>Kolom</button>
       </div>
       <?php if ($canInput && !empty($rows)): ?>
       <div id="bulkBar" class="w-100 mt-2 p-2 border rounded bg-light d-none align-items-center gap-2 flex-wrap">
@@ -140,7 +139,7 @@ $__csrf = csrfToken();
       <?php endif; ?>
     </div>
     <div class="card-body"><div class="table-responsive">
-      <table class="table table-hover datatable align-middle" style="width:100%">
+      <table class="table table-hover datatable align-middle" id="tblAnakTK" style="width:100%">
         <thead class="table-light">
           <tr>
             <th style="width:36px"><input type="checkbox" id="checkAll" title="Centang semua"></th><th>No</th><th>Nama</th><th>L/P</th><th>Kelas</th><th>Sekolah / TK</th><th>NIK</th>
@@ -177,8 +176,8 @@ $__csrf = csrfToken();
   <div class="card border-0 shadow-sm mt-3">
     <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-user-clock me-2 text-secondary"></i>Belum Masuk Kelas (<?= count($rowsTanpa) ?>)</h5></div>
     <div class="card-body table-responsive">
-      <table class="table table-hover align-middle" style="width:100%">
-        <thead class="table-light"><tr><th style="width:36px"><input type="checkbox" id="checkAll" title="Centang semua"></th><th>No</th><th>Nama</th><th>L/P</th><th>NIK</th><th>Aksi</th></tr></thead>
+      <table class="table table-hover align-middle table-sm table-striped opensid-table" style="width:100%">
+        <thead class="table-primary text-nowrap"><tr><th style="width:36px"><input type="checkbox" id="checkAll" title="Centang semua"></th><th>No</th><th>Nama</th><th>L/P</th><th>NIK</th><th>Aksi</th></tr></thead>
         <tbody>
         <?php foreach ($rowsTanpa as $i => $r): ?>
           <tr>
@@ -197,6 +196,27 @@ $__csrf = csrfToken();
   <?php if ($tanpaKelas > 0 && !$showAll): ?>
   <div class="mt-2"><a href="index.php?tampil=semua" class="btn btn-sm btn-outline-secondary"><i class="fas fa-eye me-1"></i>Tampilkan <?= $tanpaKelas ?> anak yang belum masuk kelas</a></div>
   <?php endif; ?>
+
+  <!-- Pop-up pilih kolom -->
+  <div class="modal fade" id="modalKolomTK" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-columns me-2"></i>Pilih Kolom</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="3" id="cktk_lp" checked><label class="form-check-label" for="cktk_lp">L/P</label></div>
+          <div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="4" id="cktk_kelas" checked><label class="form-check-label" for="cktk_kelas">Kelas</label></div>
+          <div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="5" id="cktk_sek" checked><label class="form-check-label" for="cktk_sek">Sekolah / TK</label></div>
+          <div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="6" id="cktk_nik" checked><label class="form-check-label" for="cktk_nik">NIK</label></div>
+          <div class="form-check"><input class="form-check-input col-toggle" type="checkbox" value="7" id="cktk_status" checked><label class="form-check-label" for="cktk_status">Status</label></div>
+          <hr class="my-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary w-100" id="kolomResetTK">Tampilkan Semua</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div></section>
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
 <?php // ---- Aksi: Naik Kelas / Lulus / Hapus ---- ?>
@@ -205,6 +225,35 @@ $(function(){
   var APP = "<?= APP_URL ?>";
   var CSRF = "<?= csrfToken() ?>";
   var TYPE = "anak_tk";
+  /* ---- Dropdown Pilih Kelas: hanya kelas yang dipilih yang tampil ---- */
+  $(document).on("change", "#pilihKelasTK", function(){
+    var v = $(this).val() || "";
+    var url = "index.php" + (v ? ("?kelas=" + encodeURIComponent(v)) : "");
+    <?php if ($showAll): ?>url += (v ? "&" : "?") + "tampil=semua";<?php endif; ?>
+    window.location.href = url;
+  });
+  /* ---- Pop-up pilih kolom (rapi, tersimpan per perangkat) ---- */
+  (function(){
+    var TBL = "#tblAnakTK", LSKEY = "kolom_anak_tk_v1";
+    var DEF = [3,4,5,6,7];
+    function api(){ try { var $t=$(TBL); if ($.fn.DataTable && $.fn.dataTable.isDataTable($t)) return $t.DataTable(); } catch(e){} return null; }
+    function apply(list){
+      var a = api(); if(!a) return false;
+      DEF.forEach(function(i){ try{ a.column(i).visible(list.indexOf(i)!==-1, false); }catch(e){} });
+      try{ a.columns.adjust().draw(false); }catch(e){}
+      return true;
+    }
+    function load(){ try{ var v=JSON.parse(localStorage.getItem(LSKEY)||"null"); if(Array.isArray(v)) return v; }catch(e){} return DEF.slice(); }
+    function save(list){ try{ localStorage.setItem(LSKEY, JSON.stringify(list)); }catch(e){} }
+    function syncBox(list){ $(".col-toggle").each(function(){ this.checked = list.indexOf(+this.value)!==-1; }); }
+    var tries = 0, list = load();
+    (function init(){ if(apply(list)){ syncBox(list); return; } if(++tries<20) setTimeout(init, 250); else syncBox(list); })();
+    $(document).on("change", ".col-toggle", function(){
+      list = $(".col-toggle:checked").map(function(){return +this.value;}).get();
+      if(apply(list)) save(list); syncBox(list);
+    });
+    $(document).on("click", "#kolomResetTK", function(){ list = DEF.slice(); if(apply(list)) save(list); syncBox(list); });
+  })();
   function setKelas(id, aksi, kelas) {
     if (typeof showLoading==="function") showLoading("Menyimpan...");
     $.ajax({ url: APP+"/ajax/kelas_tk.php", type:"POST", dataType:"json",

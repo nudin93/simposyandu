@@ -46,12 +46,6 @@ if (!$u) {
   </div></div>
 </section>
 <section class="content"><div class="container-fluid">
-  <div class="alert alert-info border-0 shadow-sm">
-    <i class="fas fa-info-circle me-1"></i>
-    Pilih sasaran usia produktif yang akan diskrining. Jika belum ada di daftar, daftar dulu dari
-    <a href="<?= APP_URL ?>/modules/usia_produktif/index.php" class="fw-semibold">Data Usia Produktif</a>
-    (tombol <strong>Daftarkan</strong>).
-  </div>
   <div class="card border-0 shadow-sm">
     <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
       <h5 class="mb-0"><i class="fas fa-users me-2 text-primary"></i>Pilih Usia Produktif Terdaftar</h5>

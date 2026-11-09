@@ -129,6 +129,30 @@ $total_l = count(array_filter($rows, fn($r) => ($r['jenis_kelamin']??'') === 'L'
 $total_p = count(array_filter($rows, fn($r) => ($r['jenis_kelamin']??'') === 'P'));
 $total_opensid = count(array_filter($rows, fn($r) => $r['sumber'] === 'opensid'));
 $total_manual = count(array_filter($rows, fn($r) => $r['sumber'] === 'lokal'));
+
+// Pagination ala Penduduk: cari + halaman server (tanpa nomor berurut)
+$search = trim($_GET['q'] ?? '');
+$page = max(1, (int)($_GET['page'] ?? 1));
+$perPage = max(10, min(100, (int)($_GET['per_page'] ?? 10)));
+$offset = ($page - 1) * $perPage;
+if ($search !== '') {
+    $sq = strtolower($search);
+    $rows = array_values(array_filter($rows, function ($r) use ($sq) {
+        foreach (['nama', 'nik', 'nomor_peserta', 'dusun'] as $k) {
+            if (isset($r[$k]) && stripos((string)$r[$k], $sq) !== false) return true;
+        }
+        return false;
+    }));
+}
+$ftotal = count($rows);
+$totalPages = max(1, (int)ceil($ftotal / max(1, $perPage)));
+$pageRows = array_slice($rows, $offset, $perPage);
+if (!function_exists('buildQs')) {
+    function buildQs(array $params): string {
+        return http_build_query(array_filter($params, fn($v) => $v !== '' && $v !== null));
+    }
+}
+$baseQs = ['q' => $search, 'per_page' => $perPage];
 ?>
 <section class="content-header">
   <div class="container-fluid">
@@ -148,22 +172,6 @@ $total_manual = count(array_filter($rows, fn($r) => $r['sumber'] === 'lokal'));
 
 <section class="content">
 <div class="container-fluid">
-
-  <div class="alert alert-info border-0 shadow-sm">
-    <div class="d-flex flex-wrap align-items-center gap-2">
-      <div class="flex-grow-1">
-        <strong><i class="fas fa-info-circle me-1"></i>Sumber data:</strong>
-        Data balita diambil dari <strong>OpenSID</strong> (penduduk aktif, usia <strong>0–59 bulan</strong>).
-        Tidak perlu mendaftarkan ulang anak yang sudah ada di OpenSID.
-        Tombol <em>Tambah Manual</em> hanya untuk anak yang <u>belum</u> terdata di OpenSID.
-      </div>
-      <?php if (!$opensid_ok): ?>
-        <span class="badge bg-warning text-dark">OpenSID tidak terhubung — menampilkan data lokal saja</span>
-      <?php else: ?>
-        <span class="badge bg-success">OpenSID terhubung</span>
-      <?php endif; ?>
-    </div>
-  </div>
 
   <div class="row g-2 mb-3">
     <div class="col-6 col-md-3">
@@ -202,10 +210,37 @@ $total_manual = count(array_filter($rows, fn($r) => $r['sumber'] === 'lokal'));
         </a>
       </div>
     </div>
-    <div class="card-body">
-      <div class="table-responsive">
-        <table class="table table-hover table-sm align-middle datatable" id="tblBalita">
-          <thead class="table-light">
+    <div class="card-header bg-light py-2">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-5">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Cari:</span>
+            <input type="text" name="q" class="form-control" placeholder="Nama / NIK / No. Peserta..." value="<?= htmlspecialchars($search) ?>">
+          </div>
+        </div>
+        <div class="col-9 col-md-3">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text">Tampilkan</span>
+            <select name="per_page" class="form-select" onchange="this.form.submit()">
+              <?php foreach ([10,25,50,100] as $pp): ?>
+              <option value="<?= $pp ?>" <?= $perPage===$pp?'selected':'' ?>><?= $pp ?></option>
+              <?php endforeach; ?>
+            </select>
+            <span class="input-group-text">entri</span>
+          </div>
+        </div>
+        <div class="col-3 col-md-1">
+          <button class="btn btn-sm btn-primary w-100"><i class="fas fa-search"></i></button>
+        </div>
+        <div class="col-12 col-md-3 text-md-end">
+          <span class="text-muted small"><?= number_format($ftotal) ?> balita</span>
+        </div>
+      </form>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive opensid-scroll">
+        <table class="table table-hover table-sm align-middle table-striped opensid-table" id="tblBalita">
+          <thead class="table-primary text-nowrap">
             <tr>
               <th>No</th>
               <th>Nama Anak</th>
@@ -219,14 +254,15 @@ $total_manual = count(array_filter($rows, fn($r) => $r['sumber'] === 'lokal'));
             </tr>
           </thead>
           <tbody>
-          <?php if (empty($rows)): ?>
+          <?php if (empty($pageRows)): ?>
             <tr><td colspan="9" class="text-center text-muted py-4">
               Tidak ada data balita usia 0–59 bulan.
               <?php if (!$opensid_ok): ?><br>Hubungkan OpenSID atau tambah manual.<?php endif; ?>
+              <?php if ($search !== ''): ?><br>Coba kata kunci lain.<?php endif; ?>
             </td></tr>
-          <?php else: foreach ($rows as $i => $r): ?>
+          <?php else: foreach ($pageRows as $i => $r): ?>
             <tr>
-              <td><?= $i + 1 ?></td>
+              <td><?= $offset + $i + 1 ?></td>
               <td>
                 <div class="fw-semibold"><?= htmlspecialchars($r['nama']) ?></div>
                 <?php if ($r['nomor_peserta']): ?>
@@ -285,6 +321,24 @@ $total_manual = count(array_filter($rows, fn($r) => $r['sumber'] === 'lokal'));
           </tbody>
         </table>
       </div>
+      <?php if ($ftotal > 0): ?>
+      <div class="d-flex flex-wrap justify-content-between align-items-center p-2 border-top bg-light gap-2">
+        <div class="text-muted small">
+          Menampilkan <?= $offset + 1 ?> sampai <?= min($offset + $perPage, $ftotal) ?> dari <?= number_format($ftotal) ?> entri
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <?php
+          $qs = buildQs($baseQs);
+          $pageBase = $qs ? "?$qs" : "?";
+          ?>
+          <a class="btn btn-sm btn-outline-primary <?= $page <= 1 ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= max(1, $page - 1) ?>">Sebelumnya</a>
+          <span class="small text-muted">Halaman</span>
+          <input type="number" class="form-control form-control-sm page-jump" style="width:74px" min="1" max="<?= $totalPages ?>" value="<?= $page ?>" data-base="<?= htmlspecialchars($pageBase) ?>" aria-label="Ke halaman">
+          <span class="small text-muted">/ <?= number_format($totalPages) ?></span>
+          <a class="btn btn-sm btn-outline-primary <?= $page >= $totalPages ? 'disabled' : '' ?>" href="<?= $pageBase . ($qs ? '&' : '') ?>page=<?= min($totalPages, $page + 1) ?>">Selanjutnya</a>
+        </div>
+      </div>
+      <?php endif; ?>
     </div>
   </div>
 </div>

@@ -76,7 +76,7 @@ require_once __DIR__ . '/../../includes/header.php';
   h.querySelectorAll('a').forEach(a=>a.onclick=e=>{e.preventDefault();const p=JSON.parse(a.dataset.p);
    id_os.value=p.id_penduduk||'';st_int.value=p.id_penduduk?'terhubung':'manual';
    nik.value=p.nik||'';no_kk.value=p.no_kk||'';nama.value=p.nama||'';jk.value=p.jenis_kelamin||'L';
-   tgl.value=p.tanggal_lahir||'';dusun.value=p.dusun||'';rt.value=p.rt||'';rw.value=p.rw||'';alamat.value=p.alamat||'';
+   tgl.value=(typeof OpenSID_normTgl==='function')?OpenSID_normTgl(p.tanggal_lahir):(p.tanggal_lahir||'');dusun.value=p.dusun||'';rt.value=p.rt||'';rw.value=p.rw||'';alamat.value=p.alamat||'';
    h.style.display='none';c.value=p.nama;});
  }));};
  document.getElementById('f').onsubmit=e=>{e.preventDefault();ajaxSubmitForm(f,{redirect:'index.php'});};

@@ -662,3 +662,28 @@ body.dark-mode .form-select {
 .card > .card-header.bg-white .mb-0 {
   color: var(--ps-ink);
 }
+
+/* ===== Tampilan tabel seragam ala Data Penduduk/Keluarga ===== */
+.opensid-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.opensid-scroll::-webkit-scrollbar { height: 6px; }
+.opensid-scroll::-webkit-scrollbar-thumb { background: #adb5bd; border-radius: 3px; }
+.opensid-table thead th {
+  font-weight: 600;
+  font-size: 0.72rem;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 0.5rem 0.45rem;
+  background: #cfe2ff !important;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.opensid-table tbody td { padding: 0.4rem 0.45rem; vertical-align: middle; }
+.opensid-table tbody tr:nth-child(even) { background-color: #f8f9fa; }
+.opensid-table tbody tr:hover { background-color: rgba(13,110,253,0.06); }
+.dataTables_wrapper .dataTables_info { color: #6c757d; font-size: 0.85rem; }
+.dataTables_wrapper .dataTables_length label,
+.dataTables_wrapper .dataTables_filter label { color: #6c757d; font-size: 0.85rem; }
+@media (max-width: 767.98px) {
+  .opensid-table { font-size: 0.78rem !important; }
+}

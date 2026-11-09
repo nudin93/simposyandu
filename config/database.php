@@ -857,33 +857,25 @@ function resolveKepalaKeluargaOpenSID($k) {
         return ['nama_kepala' => $r['nama'], 'nik_kepala_str' => $r['nik'] ?? ''];
     }
 
-    // 2) nik_kepala sebagai ID penduduk
+    // 2) nik_kepala sebagai ID penduduk (hanya yang hidup/aktif)
     if ($nk !== '' && ctype_digit($nk)) {
         $r = opensid_fetchOne("SELECT nama, nik FROM tweb_penduduk
-            WHERE id = " . (int)$nk . " LIMIT 1");
+            WHERE id = " . (int)$nk . " AND status_dasar = 1 LIMIT 1");
         if ($r && !empty($r['nama'])) {
             return ['nama_kepala' => $r['nama'], 'nik_kepala_str' => $r['nik'] ?? ''];
         }
     }
 
-    // 3) nik_kepala sebagai NIK (string 16 digit)
+    // 3) nik_kepala sebagai NIK (string 16 digit, hanya yang hidup/aktif)
     if ($nk !== '') {
         $r = opensid_fetchOne("SELECT nama, nik FROM tweb_penduduk
-            WHERE nik = '$nk' LIMIT 1");
+            WHERE nik = '$nk' AND status_dasar = 1 LIMIT 1");
         if ($r && !empty($r['nama'])) {
             return ['nama_kepala' => $r['nama'], 'nik_kepala_str' => $r['nik'] ?? ''];
         }
     }
 
-    // 4) kk_level = 1 tanpa filter status (bisa pindah/meninggal tapi masih tercatat kepala)
-    $r = opensid_fetchOne("SELECT nama, nik FROM tweb_penduduk
-        WHERE id_kk = $kid AND kk_level = 1
-        ORDER BY status_dasar ASC, id ASC LIMIT 1");
-    if ($r && !empty($r['nama'])) {
-        return ['nama_kepala' => $r['nama'], 'nik_kepala_str' => $r['nik'] ?? ''];
-    }
-
-    // 5) Anggota hidup pertama di KK
+    // 4) Anggota hidup pertama di KK (urut kepala dulu)
     $r = opensid_fetchOne("SELECT nama, nik FROM tweb_penduduk
         WHERE id_kk = $kid AND status_dasar = 1
         ORDER BY CASE WHEN kk_level IS NULL OR kk_level = 0 THEN 99 ELSE kk_level END ASC, id ASC
@@ -892,7 +884,7 @@ function resolveKepalaKeluargaOpenSID($k) {
         return ['nama_kepala' => $r['nama'], 'nik_kepala_str' => $r['nik'] ?? ''];
     }
 
-    // 6) Anggota manapun di KK
+    // 5) Terakhir: anggota manapun di KK
     $r = opensid_fetchOne("SELECT nama, nik FROM tweb_penduduk
         WHERE id_kk = $kid
         ORDER BY CASE WHEN kk_level IS NULL OR kk_level = 0 THEN 99 ELSE kk_level END ASC, id ASC
@@ -910,6 +902,8 @@ function resolveKepalaKeluargaOpenSID($k) {
 function enrichKeluargaRows($rows) {
     $out = [];
     foreach ($rows as $k) {
+        // Tanpa anggota aktif (semua meninggal/pindah/hilang) → jangan tampilkan
+        if (array_key_exists('jml', $k) && (int)$k['jml'] <= 0) continue;
         if (empty($k['nama_kepala'])) {
             $resolved = resolveKepalaKeluargaOpenSID($k);
             $k['nama_kepala'] = $resolved['nama_kepala'];
@@ -926,7 +920,7 @@ function enrichKeluargaRows($rows) {
 /**
  * Cari keluarga dari OpenSID
  */
-function cariKeluargaOpenSID($q, $limit = 25) {
+function cariKeluargaOpenSID($q, $limit = 25, $offset = 0) {
     if (!opensid_available() || strlen(trim($q)) < 1) return [];
     $s = opensid_escape(trim($q));
     $sql = "
@@ -939,12 +933,12 @@ function cariKeluargaOpenSID($q, $limit = 25) {
                  WHERE p1.id_kk = k.id AND p1.kk_level = 1 AND p1.status_dasar = 1
                  ORDER BY p1.id ASC LIMIT 1),
                 (SELECT p2.nama FROM tweb_penduduk p2
-                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$'
+                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$' AND p2.status_dasar = 1
                  LIMIT 1),
                 (SELECT p2b.nama FROM tweb_penduduk p2b
-                 WHERE p2b.nik = k.nik_kepala LIMIT 1),
+                 WHERE p2b.nik = k.nik_kepala AND p2b.status_dasar = 1 LIMIT 1),
                 (SELECT p3.nama FROM tweb_penduduk p3
-                 WHERE p3.id_kk = k.id AND p3.kk_level = 1
+                 WHERE p3.id_kk = k.id AND p3.kk_level = 1 AND p3.status_dasar = 1
                  ORDER BY p3.id ASC LIMIT 1),
                 (SELECT p4.nama FROM tweb_penduduk p4
                  WHERE p4.id_kk = k.id AND p4.status_dasar = 1
@@ -956,12 +950,12 @@ function cariKeluargaOpenSID($q, $limit = 25) {
                  WHERE p1.id_kk = k.id AND p1.kk_level = 1 AND p1.status_dasar = 1
                  ORDER BY p1.id ASC LIMIT 1),
                 (SELECT p2.nik FROM tweb_penduduk p2
-                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$'
+                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$' AND p2.status_dasar = 1
                  LIMIT 1),
                 (SELECT p2b.nik FROM tweb_penduduk p2b
-                 WHERE p2b.nik = k.nik_kepala LIMIT 1),
+                 WHERE p2b.nik = k.nik_kepala AND p2b.status_dasar = 1 LIMIT 1),
                 (SELECT p3.nik FROM tweb_penduduk p3
-                 WHERE p3.id_kk = k.id AND p3.kk_level = 1
+                 WHERE p3.id_kk = k.id AND p3.kk_level = 1 AND p3.status_dasar = 1
                  ORDER BY p3.id ASC LIMIT 1)
             ) AS nik_kepala_str,
             k.alamat,
@@ -976,12 +970,34 @@ function cariKeluargaOpenSID($q, $limit = 25) {
            OR IFNULL(w.dusun,'') LIKE '%$s%'
            OR EXISTS (
                 SELECT 1 FROM tweb_penduduk px
-                WHERE px.id_kk = k.id
+                WHERE px.id_kk = k.id AND px.status_dasar = 1
                   AND (px.nama LIKE '%$s%' OR px.nik LIKE '%$s%')
            )
+        HAVING jml > 0
         ORDER BY nama_kepala ASC
-        LIMIT " . (int)$limit;
+        LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
     return enrichKeluargaRows(opensid_fetchAll($sql));
+}
+
+/**
+ * Hitung jumlah KK (hanya yang masih punya anggota aktif),
+ * dengan filter pencarian yang sama seperti cariKeluargaOpenSID.
+ */
+function countKeluargaOpenSID($q = '') {
+    if (!opensid_available()) return 0;
+    $where = "(SELECT COUNT(*) FROM tweb_penduduk px WHERE px.id_kk = k.id AND px.status_dasar = 1) > 0";
+    if (strlen(trim($q)) >= 1) {
+        $s = opensid_escape(trim($q));
+        $where .= " AND (k.no_kk LIKE '%$s%'"
+            . " OR IFNULL(k.alamat,'') LIKE '%$s%'"
+            . " OR IFNULL(w.dusun,'') LIKE '%$s%'"
+            . " OR EXISTS (SELECT 1 FROM tweb_penduduk px2 WHERE px2.id_kk = k.id AND px2.status_dasar = 1"
+            . " AND (px2.nama LIKE '%$s%' OR px2.nik LIKE '%$s%')))";
+    }
+    $r = opensid_fetchOne("SELECT COUNT(*) AS c FROM tweb_keluarga k
+        LEFT JOIN tweb_wil_clusterdesa w ON w.id = k.id_cluster
+        WHERE $where");
+    return (int)($r['c'] ?? 0);
 }
 
 /**
@@ -1001,19 +1017,19 @@ function listKeluargaOpenSID($limit = 100, $offset = 0) {
                  WHERE p1.id_kk = k.id AND p1.kk_level = 1 AND p1.status_dasar = 1
                  ORDER BY p1.id ASC LIMIT 1),
                 (SELECT p2.nama FROM tweb_penduduk p2
-                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$'
+                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$' AND p2.status_dasar = 1
                  LIMIT 1),
                 (SELECT p2b.nama FROM tweb_penduduk p2b
-                 WHERE p2b.nik = k.nik_kepala LIMIT 1),
+                 WHERE p2b.nik = k.nik_kepala AND p2b.status_dasar = 1 LIMIT 1),
                 (SELECT p3.nama FROM tweb_penduduk p3
-                 WHERE p3.id_kk = k.id AND p3.kk_level = 1
+                 WHERE p3.id_kk = k.id AND p3.kk_level = 1 AND p3.status_dasar = 1
                  ORDER BY p3.id ASC LIMIT 1),
                 (SELECT p4.nama FROM tweb_penduduk p4
                  WHERE p4.id_kk = k.id AND p4.status_dasar = 1
                  ORDER BY CASE WHEN p4.kk_level IS NULL OR p4.kk_level = 0 THEN 99 ELSE p4.kk_level END ASC, p4.id ASC
                  LIMIT 1),
                 (SELECT p5.nama FROM tweb_penduduk p5
-                 WHERE p5.id_kk = k.id
+                 WHERE p5.id_kk = k.id AND p5.status_dasar = 1
                  ORDER BY CASE WHEN p5.kk_level IS NULL OR p5.kk_level = 0 THEN 99 ELSE p5.kk_level END ASC, p5.id ASC
                  LIMIT 1)
             ) AS nama_kepala,
@@ -1022,12 +1038,12 @@ function listKeluargaOpenSID($limit = 100, $offset = 0) {
                  WHERE p1.id_kk = k.id AND p1.kk_level = 1 AND p1.status_dasar = 1
                  ORDER BY p1.id ASC LIMIT 1),
                 (SELECT p2.nik FROM tweb_penduduk p2
-                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$'
+                 WHERE p2.id = CAST(k.nik_kepala AS UNSIGNED) AND k.nik_kepala REGEXP '^[0-9]+$' AND p2.status_dasar = 1
                  LIMIT 1),
                 (SELECT p2b.nik FROM tweb_penduduk p2b
-                 WHERE p2b.nik = k.nik_kepala LIMIT 1),
+                 WHERE p2b.nik = k.nik_kepala AND p2b.status_dasar = 1 LIMIT 1),
                 (SELECT p3.nik FROM tweb_penduduk p3
-                 WHERE p3.id_kk = k.id AND p3.kk_level = 1
+                 WHERE p3.id_kk = k.id AND p3.kk_level = 1 AND p3.status_dasar = 1
                  ORDER BY p3.id ASC LIMIT 1)
             ) AS nik_kepala_str,
             k.alamat,
@@ -1037,6 +1053,7 @@ function listKeluargaOpenSID($limit = 100, $offset = 0) {
             (SELECT COUNT(*) FROM tweb_penduduk px WHERE px.id_kk = k.id AND px.status_dasar = 1) AS jml
         FROM tweb_keluarga k
         LEFT JOIN tweb_wil_clusterdesa w ON w.id = k.id_cluster
+        HAVING jml > 0
         ORDER BY nama_kepala ASC
         LIMIT $limit OFFSET $offset";
     return enrichKeluargaRows(opensid_fetchAll($sql));

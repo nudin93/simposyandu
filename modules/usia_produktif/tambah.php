@@ -65,7 +65,7 @@ if(!res.data?.length){h.innerHTML='<div class="list-group-item">Kosong</div>';h.
 h.innerHTML=res.data.map(p=>`<a href="#" class="list-group-item list-group-item-action" data-p='${JSON.stringify(p).replace(/'/g,"&#39;")}'>${p.nama} · ${p.nik||''}</a>`).join('');
 h.style.display='block';h.querySelectorAll('a').forEach(a=>a.onclick=e=>{e.preventDefault();const p=JSON.parse(a.dataset.p);
 id_os.value=p.id_penduduk||'';st.value=p.id_penduduk?'terhubung':'manual';nik.value=p.nik||'';no_kk.value=p.no_kk||'';
-nama.value=p.nama||'';jk.value=p.jenis_kelamin||'L';tgl.value=p.tanggal_lahir||'';dusun.value=p.dusun||'';
+nama.value=p.nama||'';jk.value=p.jenis_kelamin||'L';tgl.value=(typeof OpenSID_normTgl==='function')?OpenSID_normTgl(p.tanggal_lahir):(p.tanggal_lahir||'');dusun.value=p.dusun||'';
 rt.value=p.rt||'';rw.value=p.rw||'';alamat.value=p.alamat||'';h.style.display='none';c.value=p.nama;});
 }));}; f.onsubmit=e=>{e.preventDefault();ajaxSubmitForm(f,{redirect:'index.php'});};
 })();
